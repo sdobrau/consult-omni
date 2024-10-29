@@ -75,8 +75,6 @@ static commands fetch search results once without dynamic completion"
                  (const :tag "Only make STATIC interactive commands" 'static)
                  ))
 
-
-
 (defcustom consult-omni-default-browse-function #'browse-url
   "consult-omni default function when selecting a link"
   :type '(choice (function :tag "(Default) Browse URL" browse-url)
@@ -373,9 +371,8 @@ This is used in dynamic collection to change grouping.")
                                             ("PubMed" . "https://pubmed.ncbi.nlm.nih.gov/?q=%s")
                                             ("Wikipedia" . "https://en.wikipedia.org/wiki/Special:Search/%s")
                                             ("YouTube" . "https://www.youtube.com/search?q=%s")
-                                            ("gptel" . #'consult-omni--gptel-preview
-)
-)
+                                            ("gptel" . #'consult-omni--gptel-preview)
+                                            ("Other" . #'consult-omni--choose-other-source-for-new))
 "Alist of search engine name and URLs.
 
 car of each item is the name of the engine
@@ -1300,8 +1297,27 @@ CALLBACK is used as a fall back."
 ***** external search with engine
 #+begin_src emacs-lisp
 (defun consult-omni-external-search-with-engine (engine &optional cand)
-  "Funtion for new non-existing CAND in `consult-omni-brave'."
+  "Run `consult-omni-external-search' on CAND with a specific ENGINE."
     (funcall #'consult-omni-external-search cand engine))
+#+end_src
+***** choose other source for new
+#+begin_src emacs-lisp
+(defun consult-omni--choose-other-source-for-new (cand)
+  "Choose a source to use for non-existing CAND."
+    (interactive)
+    (let* ((sources (cl-remove-duplicates (delq nil (mapcar (lambda (item)
+                              (when-let ((new (consult-omni--get-source-prop item :on-new))
+                                         (name (consult-omni--get-source-prop item :name)))
+                                (when (not (eq new #'consult-omni--default-new))
+                                  (cons name new))))
+                            consult-omni-multi-sources))))
+           (action (consult--read sources
+                                  :prompt "Create a new item on source: "
+                                  :lookup #'consult--lookup-cdr
+                                  )))
+      (if (functionp action)
+          (funcall action cand)
+        (error "Do not know how to make a new item for that source!"))))
 #+end_src
 ***** consult-omni--default-new
 #+begin_src emacs-lisp
@@ -2792,7 +2808,7 @@ Gets the default callback function from `consult-omni-sources-alist'."
 (add-to-list 'embark-default-action-overrides '(consult-omni . consult-omni-embark-default-action))
 
 (defun consult-omni-embark-insert-title (cand)
-  "Insert the title oif the candidate at point"
+  "Insert the title of the candidate at point"
   (if-let ((title (and (stringp cand) (get-text-property 0 :title cand))))
       (insert (format " %s " title))))
 
@@ -2802,7 +2818,7 @@ Gets the default callback function from `consult-omni-sources-alist'."
       (kill-new (string-trim title))))
 
 (defun consult-omni-embark-insert-url-link (cand)
-  "Insert the title of the candidate at point."
+  "Insert the url link of the candidate at point."
   (let* ((url (and (stringp cand) (get-text-property 0 :url cand)))
          (url (and (stringp url) (string-trim url)))
          (title (and (stringp cand) (get-text-property 0 :title cand))))

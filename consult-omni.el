@@ -56,8 +56,6 @@ static commands fetch search results once without dynamic completion"
                  (const :tag "Only make STATIC interactive commands" 'static)
                  ))
 
-
-
 (defcustom consult-omni-default-browse-function #'browse-url
   "consult-omni default function when selecting a link"
   :type '(choice (function :tag "(Default) Browse URL" browse-url)
@@ -341,9 +339,8 @@ This is used in dynamic collection to change grouping.")
                                             ("PubMed" . "https://pubmed.ncbi.nlm.nih.gov/?q=%s")
                                             ("Wikipedia" . "https://en.wikipedia.org/wiki/Special:Search/%s")
                                             ("YouTube" . "https://www.youtube.com/search?q=%s")
-                                            ("gptel" . #'consult-omni--gptel-preview
-)
-)
+                                            ("gptel" . #'consult-omni--gptel-preview)
+                                            ("Other" . #'consult-omni--choose-other-source-for-new))
 "Alist of search engine name and URLs.
 
 car of each item is the name of the engine
@@ -1135,8 +1132,25 @@ CALLBACK is used as a fall back."
 ))
 
 (defun consult-omni-external-search-with-engine (engine &optional cand)
-  "Funtion for new non-existing CAND in `consult-omni-brave'."
+  "Run `consult-omni-external-search' on CAND with a specific ENGINE."
     (funcall #'consult-omni-external-search cand engine))
+
+(defun consult-omni--choose-other-source-for-new (cand)
+  "Choose a source to use for non-existing CAND."
+    (interactive)
+    (let* ((sources (cl-remove-duplicates (delq nil (mapcar (lambda (item)
+                              (when-let ((new (consult-omni--get-source-prop item :on-new))
+                                         (name (consult-omni--get-source-prop item :name)))
+                                (when (not (eq new #'consult-omni--default-new))
+                                  (cons name new))))
+                            consult-omni-multi-sources))))
+           (action (consult--read sources
+                                  :prompt "Create a new item on source: "
+                                  :lookup #'consult--lookup-cdr
+                                  )))
+      (if (functionp action)
+          (funcall action cand)
+        (error "Do not know how to make a new item for that source!"))))
 
 (defun consult-omni--default-new (cand)
   "Wrapperfor calling `consult-omni-default-new-function'."
@@ -1886,8 +1900,6 @@ instead. Refer to `consult-omni-define-source' for details on arguments."
 
 Do not use this function directly, use `consult-omni-define-source' macro
 instead. Refer to `consult-omni-define-source' for details on arguments."
-
-
 
   (let* ((consult-async-refresh-delay consult-omni-dynamic-refresh-delay)
          (consult-async-input-throttle consult-omni-dynamic-input-throttle)

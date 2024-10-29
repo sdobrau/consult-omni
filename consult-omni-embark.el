@@ -43,7 +43,7 @@ Gets the default callback function from `consult-omni-sources-alist'."
 (add-to-list 'embark-default-action-overrides '(consult-omni . consult-omni-embark-default-action))
 
 (defun consult-omni-embark-insert-title (cand)
-  "Insert the title oif the candidate at point"
+  "Insert the title of the candidate at point"
   (if-let ((title (and (stringp cand) (get-text-property 0 :title cand))))
       (insert (format " %s " title))))
 
@@ -53,7 +53,7 @@ Gets the default callback function from `consult-omni-sources-alist'."
       (kill-new (string-trim title))))
 
 (defun consult-omni-embark-insert-url-link (cand)
-  "Insert the title of the candidate at point."
+  "Insert the url link of the candidate at point."
   (let* ((url (and (stringp cand) (get-text-property 0 :url cand)))
          (url (and (stringp url) (string-trim url)))
          (title (and (stringp cand) (get-text-property 0 :title cand))))
