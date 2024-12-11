@@ -2545,7 +2545,7 @@ macro. See `consult-omni-define-source' for more details."
 ** Frontend Interactive commands
 *** consult-omni-multi
 #+begin_src emacs-lisp
-
+;;;###autoload
 (defun consult-omni-multi (&optional initial prompt sources no-callback &rest args)
   "Interactive “multi-source dynamic search”
 
@@ -2660,7 +2660,7 @@ here: URL `https://github.com/minad/consult'."
 #+end_src
 *** consult-omni-multi-static
 #+begin_src emacs-lisp
-
+;;;###autoload
 (defun consult-omni-multi-static (&optional input prompt sources no-callback &rest args)
   "Interactive “static” multi-source search
 
@@ -2728,6 +2728,7 @@ Description of Arguments:
 #+end_src
 *** consult-omni
 #+begin_src emacs-lisp
+;;;###autoload
 (defun consult-omni (&rest args)
   "Convinient wrapper function for favorite interactive command.
 

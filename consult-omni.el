@@ -2261,6 +2261,7 @@ macro. See `consult-omni-define-source' for more details."
                                             :annotate ',annotate
                                             :require-match ',require-match)))))
 
+;;;###autoload
 (defun consult-omni-multi (&optional initial prompt sources no-callback &rest args)
   "Interactive “multi-source dynamic search”
 
@@ -2373,6 +2374,7 @@ here: URL `https://github.com/minad/consult'."
       (setq selected (funcall callback-func selected))))
     selected))
 
+;;;###autoload
 (defun consult-omni-multi-static (&optional input prompt sources no-callback &rest args)
   "Interactive “static” multi-source search
 
@@ -2438,6 +2440,7 @@ Description of Arguments:
       (setq selected (funcall callback-func selected))))
     selected))
 
+;;;###autoload
 (defun consult-omni (&rest args)
   "Convinient wrapper function for favorite interactive command.
 
