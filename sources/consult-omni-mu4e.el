@@ -28,7 +28,7 @@
 (require 'consult-mu)
 
 (defun consult-omni-mu--format-candidate (cand highlight)
-  "Format CAND from `consult-omni-mu4e'
+  "Format CAND from `consult-omni-mu4e'.
 
 Description of Arguments:
 

@@ -289,6 +289,7 @@ regexp pattern “.*QUERY.*”), it is parsed by
 (setq consult-omni-apps--cached-items  (consult-omni-apps--cached-items consult-omni-apps-cached-apps ".*"))
 
 (defun consult-omni--apps-update-cached-items ()
+"Update list of cached app names."
 (let ((consult-omni-apps-use-cache nil))
   (consult-omni-apps--cached-items consult-omni-apps-cached-apps ".*")))
 
