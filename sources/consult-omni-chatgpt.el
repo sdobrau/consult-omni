@@ -1,4 +1,4 @@
-;;; consult-omni-chatgpt.el --- Consulting chatGPT -*- lexical-binding: t -*-
+;;; consult-omni-chatgpt.el --- Consulting ChatGPT -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2024 Armin Darvish
 
@@ -6,42 +6,50 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-chatgpt provides commands for getting ChatGPT results
+;; directly in the minibuffer using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
-(defcustom consult-omni-openai-api-key nil
-"Key for OpeAI API
+;;; User Options (a.k.a. Custom Variables)
 
-See URL `https://openai.com/product' and
-URL `https://platform.openai.com/docs/introduction'
-for details."
-:group 'consult-omni
-:type '(choice (const :tag "API Key" string)
-               (function :tag "Custom Function")))
+(defcustom consult-omni-openai-api-key nil
+  "Key for OpeAI API.
+
+Can be a key string or a function that returns a key string.
+
+Refer to URL `https://openai.com/product' and
+URL `https://platform.openai.com/docs/introduction' for details on getting
+an API key."
+  :group 'consult-omni
+  :type '(choice (string :tag "API Key")
+                 (function :tag "Custom Function")))
 
 (defvar consult-omni-chatgpt-api-url "https://api.openai.com/v1/chat/completions"
-"API URL for OpenAI chatgpt service")
+"API URL for OpenAI chatgpt service.")
 
 (defun consult-omni-dynamic--chatgpt-format-candidate (source query title &optional model face)
-  "Formats candidates of `consult-omni-chatgpt'.
+  "Format candidates of `consult-omni-chatgpt'.
 
 Description of Arguments:
 
-  SOURCE     the source name to use (e.g. “chatgPT”)
-  QUERY      query input from the user
-  URL        a string pointing to url of the candidate
-  SEARCH-URL a string pointing to the url for
-             the search results of QUERY on the SOURCE website
-  TITLE      the title of the candidate (e.g. response from chatgpt)
-  MODEL      the OpenAI model used
-  FACE       the face to apply to TITLE"
+  SOURCE     a string; the source name to use \(e.g. “ChatGPT”\)
+  QUERY      a string; query input from the user
+  TITLE      a string; the title of the candidate
+             \(e.g. response from ChatGPT\)
+  MODEL      a string; the OpenAI model used
+  FACE       a string; the face to apply to TITLE"
   (let* ((source (if (stringp source) (propertize source 'face 'consult-omni-source-type-face)))
          (title-str (consult-omni--set-string-width title (floor (* (frame-width) 0.4))))
          (title-str (propertize title-str 'face (or face 'consult-omni-ai-title-face)))
@@ -53,26 +61,26 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (defun consult-omni--chatgpt-response-preview (response &optional query)
-  "Returns a buffer with formatted RESPONSE from chatGPT"
+  "Return a buffer with formatted RESPONSE to QUERY from ChatGPT."
   (save-excursion
     (let ((buff (get-buffer-create "*consult-omni-chatgpt-response*")))
       (with-current-buffer buff
         (erase-buffer)
         (if query (insert (format "# User:\n\n %s\n\n" query)))
-        (if response (insert (format "# chatGPT:\n\n %s\n\n" response)))
+        (if response (insert (format "# ChatGPT:\n\n %s\n\n" response)))
         (if (featurep 'mardown-mode)
             (require 'markdown-mode)
           (markdown-mode))
         (point-marker)))))
 
 (defun consult-omni--chatgpt-preview (cand)
-  "Shows a preview buffer with chatGPT response from CAND"
+  "Show a preview buffer with ChatGPT response in CAND."
   (when-let ((buff (get-buffer "*consult-omni-chatgpt-response*")))
     (kill-buffer buff))
   (if (listp cand) (setq cand (or (car-safe cand) cand)))
@@ -82,7 +90,15 @@ Description of Arguments:
     (consult--jump marker)))
 
 (cl-defun consult-omni--chatgpt-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetches chat response for INPUT from chatGPT."
+  "Fetch chat response for INPUT from ChatGPT with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (model (or (plist-get opts :model) "gpt-3.5-turbo"))
@@ -99,7 +115,7 @@ Description of Arguments:
                              :parser #'consult-omni--json-parse-buffer
                              :callback
                              (lambda (attrs)
-                               (let* ((source "chatGPT")
+                               (let* ((source "ChatGPT")
                                       (url nil)
                                       (search-url nil)
                                       (choices (car-safe (gethash "choices" attrs)))
@@ -118,8 +134,8 @@ Description of Arguments:
                                    (funcall callback (list annotated-results)))
                                  (list annotated-results))))))
 
-;; Define the chatGPT Source
-(consult-omni-define-source "chatGPT"
+;; Define the ChatGPT Source
+(consult-omni-define-source "ChatGPT"
                             :narrow-char ?a
                             :type 'dynamic
                             :require-match t

@@ -6,45 +6,65 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-google provides commands for searching Goggle in Emacs
+;; using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
 (defcustom consult-omni-google-customsearch-key nil
-  "Key for Google custom search API
+  "Key for Google custom search API.
 
-See URL `https://developers.google.com/custom-search/' and
-URL `https://developers.google.com/custom-search/v1/introduction' for details"
+Can be a key string or a function that returns a key string.
+
+Refer to URL `https://developers.google.com/custom-search/' and
+URL `https://developers.google.com/custom-search/v1/introduction' for
+getting an API key."
   :group 'consult-omni
-  :type '(choice (const :tag "API Key" string)
+  :type '(choice (string :tag "API Key")
                  (function :tag "Custom Function")))
 
 (defcustom consult-omni-google-customsearch-cx nil
-  "CX for Google custom search API
+  "CX for Google custom search API.
+
+Can be a key string or a function that returns a key string.
 
 See URL `https://developers.google.com/custom-search/' and
-URL `https://developers.google.com/custom-search/v1/introduction' for details"
+URL `https://developers.google.com/custom-search/v1/introduction' for getting a custom search CX number."
   :group 'consult-omni
-  :type '(choice (const :tag "CX String" string)
+  :type '(choice (string :tag "CX String")
                  (function :tag "Custom Function")))
 
 (defvar consult-omni-google-search-url "https://www.google.com/search"
-"Search URL for Google")
+  "Search URL for Google.")
 
 (defvar consult-omni-google-customsearch-api-url "https://www.googleapis.com/customsearch/v1"
-"API URL for Google Custom Search")
+  "API URL for “Google Custom Search”.")
 
 (cl-defun consult-omni--google-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetches search results for INPUT from “Google Custom Search” service.
+  "Fetch search results from “Google Custom Search” for INPUT with ARGS.
 
 Refer to URL `https://programmablesearchengine.google.com/about/' and
-URL `https://developers.google.com/custom-search/' for more info."
+URL `https://developers.google.com/custom-search/' for more info on
+“Google Custom Search”.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -100,7 +120,7 @@ URL `https://developers.google.com/custom-search/' for more info."
                                    (funcall callback annotated-results))
                                  annotated-results)))))
 
-;; Define the Google Source
+;; Define the Google source
 (consult-omni-define-source "Google"
                             :narrow-char ?g
                             :type 'dynamic

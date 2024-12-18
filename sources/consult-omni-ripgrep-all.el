@@ -6,37 +6,55 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-ripgrep-all provides commands for running “rga” shell
+;; commands.
+;;
+;; For info on ripgrep-all, see:
+;; URL `https://github.com/phiresky/ripgrep-all'
 
 ;;; Code:
 
 (require 'consult-omni)
 (require 'consult-omni-grep)
 
-(defconst consult-omni-ripgrep-all-match-regexp "\\`\\(?:\\./\\)?\\([^\n\0]+\\)\0\\([0-9]+\\)\\([-:]\\)\\([pP]age\s\\)?\\([0-9]+\\)?\\(.*\\)[-:\0]"
-  "Regexp used to match file and line of grep output.")
+;;; User Options (a.k.a. Custom Variables)
 
 (defcustom consult-omni-ripgrep-all-args
-'("rga" "--null" "--line-buffered" "--color=never" "--max-columns=1000" "--path-separator" "/" "--smart-case" "--no-heading" "--with-filename" "--line-number")
+  '("rga" "--null" "--line-buffered" "--color=never" "--max-columns=1000" "--path-separator" "/" "--smart-case" "--no-heading" "--with-filename" "--line-number")
   "Command line arguments for rga (ripgrep-all), see `consult-omni-ripgrep-all'.
 The dynamically computed arguments are appended.
 Can be either a string, or a list of strings or expressions."
+  :group 'consult-omni
   :type '(choice string (repeat (choice string sexp))))
 
+(defconst consult-omni-ripgrep-all-match-regexp "\\`\\(?:\\./\\)?\\([^\n\0]+\\)\0\\([0-9]+\\)\\([-:]\\)\\([pP]age\s\\)?\\([0-9]+\\)?\\(.*\\)[-:\0]"
+  "Regexp used to match file and line of grep output.")
+
 (cl-defun consult-omni--ripgrep-all-format (candidates &rest args &key source query regexp-pattern)
-  "Formats candidates for grep based commands.
+  "Format CANDIDATES for ripgrep-all commands with ARGS.
+
+Description of Arguments:
+  SOURCE         a string; the source name \(e.g. “ripgrep-all”\)
+  QUERY          a string; query input from the user
+  REGEXP-PATTERN a string; regexp to match file and line of ripgrep-all output
+                 \(for an example, see `consult-omni-ripgrep-all-match-regexp'\)
 
 Adopted from `consult--grep-format'."
-(let* ((frame-width-percent (floor (* (frame-width) 0.1)))
-       (file "")
-       (file-len 0)
-       (file-str)
-       (cand)
-       result)
+  (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
+         (file "")
+         (file-len 0)
+         (file-str)
+         (cand)
+         result)
     (save-match-data
       (dolist (str candidates)
         (when (and (not (string-prefix-p "Error" str))
@@ -54,21 +72,21 @@ Adopted from `consult--grep-format'."
             (setq file (match-string 1 str)
                   file-len (length file)))
 
-            (let* ((line (match-string 2 str))
-                   (ctx (and (numberp (match-beginning 3)) (= (aref str (match-beginning 3)) ?-)))
-                   (sep (if ctx "-" ":"))
-                   (content (substring str (or (match-end 5) (match-end 4) (match-end 3) (match-end 2) (match-end 1) (match-end 0))))
-                   (page (match-string 5 str))
-                   (page-str (and page (concat "Page " page)))
-                   (line-len (length line))
-                   (file-str (string-remove-prefix (file-truename default-directory) (file-truename file)))
-                   (file-str (if (and (stringp file-str) (> (length file-str) (* frame-width-percent 2)))
-                                 (consult-omni--set-string-width file-str (* frame-width-percent 2) (* frame-width-percent 1))
-                               file-str))
-                   (file-str-len (length file-str))
-                   (cand (concat file-str sep line sep page-str sep content)))
+          (let* ((line (match-string 2 str))
+                 (ctx (and (numberp (match-beginning 3)) (= (aref str (match-beginning 3)) ?-)))
+                 (sep (if ctx "-" ":"))
+                 (content (substring str (or (match-end 5) (match-end 4) (match-end 3) (match-end 2) (match-end 1) (match-end 0))))
+                 (page (match-string 5 str))
+                 (page-str (and page (concat "Page " page)))
+                 (line-len (length line))
+                 (file-str (string-remove-prefix (file-truename default-directory) (file-truename file)))
+                 (file-str (if (and (stringp file-str) (> (length file-str) (* frame-width-percent 2)))
+                               (consult-omni--set-string-width file-str (* frame-width-percent 2) (* frame-width-percent 1))
+                             file-str))
+                 (file-str-len (length file-str))
+                 (cand (concat file-str sep line sep page-str sep content)))
 
-              (when (length> content (* frame-width-percent 6)) (setq content (consult-omni--set-string-width content (* frame-width-percent 6))))
+            (when (length> content (* frame-width-percent 6)) (setq content (consult-omni--set-string-width content (* frame-width-percent 6))))
 
             ;; Store file name in order to avoid allocations in `consult--prefix-group'
             (add-text-properties 0 1 `(:source ,source :title ,cand :query ,query :file ,file :pos ,line :page ,page :content ,content) cand)
@@ -80,11 +98,11 @@ Adopted from `consult--grep-format'."
     result))
 
 (defun consult-omni--ripgrep-all-transform (candidates &optional query)
-  "Formats candidates of `consult-omni-ripgrep-all'."
-(consult-omni--ripgrep-all-format candidates :source "ripgrep-all" :query query :regexp-pattern consult-omni-ripgrep-all-match-regexp))
+  "Format CANDIDATES for QUERY from `consult-omni-ripgrep-all'."
+  (consult-omni--ripgrep-all-format candidates :source "ripgrep-all" :query query :regexp-pattern consult-omni-ripgrep-all-match-regexp))
 
 (defun consult-omni--ripgrep-all-preview (cand)
-  "Preview function for `consult-omni-ripgrep-all'."
+  "Preview function for CAND from `consult-omni-ripgrep-all'."
   (let ((file (get-text-property 0 :file cand))
         (pos (get-text-property 0 :pos cand))
         (page (get-text-property 0 :page cand))
@@ -108,7 +126,7 @@ Adopted from `consult--grep-format'."
           (_ nil)))
        (t
         (if (buffer-narrowed-p) (widen))
-        (and (stringp pos) (goto-line (string-to-number pos)))
+        (and (stringp pos) (forward-line (- (string-to-number pos) (line-number-at-pos))))
         (when (derived-mode-p 'org-mode)
           (org-fold-show-entry))
         (recenter nil t)
@@ -119,7 +137,15 @@ Adopted from `consult--grep-format'."
     nil))
 
 (cl-defun consult-omni--ripgrep-all-builder (input &rest args &key callback &allow-other-keys)
-  "Makes builder command line args for “ripgrep”."
+  "Make builder command line args for “ripgrep-all” with INPUT and ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -131,7 +157,7 @@ Adopted from `consult--grep-format'."
                (consult-ripgrep-args consult-omni-ripgrep-all-args))
     (funcall (consult-omni--grep-make-builder #'consult--ripgrep-make-builder default-directory) query)))
 
-;; Define the Ripgrep Source
+;; Define the ripgrep-all source
 (consult-omni-define-source "ripgrep-all"
                             :narrow-char ?r
                             :type 'async
@@ -147,7 +173,7 @@ Adopted from `consult--grep-format'."
                             :select-hist 'consult-omni--selection-history
                             :group #'consult-omni--group-function
                             :enabled (lambda () (and (executable-find "rga")
-                                                 (fboundp 'consult--ripgrep-make-builder)))
+                                                     (fboundp 'consult--ripgrep-make-builder)))
                             :sort nil
                             :interactive consult-omni-intereactive-commands-type
                             :annotate nil)

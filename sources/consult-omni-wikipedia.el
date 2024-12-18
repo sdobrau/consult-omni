@@ -6,11 +6,17 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-wikipedia provides commands for searching Wikipedia in
+;; Emacs using consult-omni as the frontend.
 
 ;;; Code:
 
@@ -20,26 +26,24 @@
   "Search URL for Wikipedia.")
 
 (defvar consult-omni-wikipedia-url "https://wikipedia.org/"
-  "Main URL for Wikipedia")
+  "Main URL for Wikipedia.")
 
 (defvar consult-omni-wikipedia-api-url "https://wikipedia.org/w/api.php"
-  "API URL for Wikipedia")
+  "API URL for Wikipedia.")
 
 (cl-defun consult-omni--wikipedia-format-candidate (&rest args &key source query url search-url title snippet date face &allow-other-keys)
-  "Returns a formatted string for Wikipedia's searches.
+  "Format a candidate from Wikipedia search with ARGS.
 
 Description of Arguments:
 
-  SOURCE     the name to use (e.g. “Wikipedia”)
-  QUERY      query input from the user
-             the search results of QUERY on the SOURCE website
-  URL        the url of  candidate
-  SEARCH-URL the web search url
-             (e.g. https://www.wikipedia.org/search-redirect.php?search=query)
-  TITLE      the title of the result/paper (e.g. title of paper)
-  SNIPPET    a string containing a snippet/description of candidate
-  DATE       the date the article was last updated
-  FACE       the face to apply to TITLE"
+  SOURCE     a string; the source name (e.g. “Wikipedia”)
+  QUERY      a string; query input from the user
+  URL        a string; the url of  candidate
+  SEARCH-URL a string; the web search url
+  TITLE      a string; the title of the result (e.g. a Wikipedia article)
+  SNIPPET    a string; a snippet/description of the Wikipedia article
+  DATE       a string; the date that the article was last updated
+  FACE       a string; the face to apply to TITLE"
   (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (source (and (stringp source) (propertize source 'face 'consult-omni-source-type-face)))
          (date (and (stringp date) (propertize date 'face 'consult-omni-date-face)))
@@ -62,7 +66,15 @@ Description of Arguments:
     str))
 
 (cl-defun consult-omni--wikipedia-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetches search results from Wikipedia for INPUT."
+  "Fetch search results from Wikipedia for INPUT and ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -113,7 +125,7 @@ Description of Arguments:
                                  (funcall callback annotated-results)
                                  annotated-results)))))
 
-;; Define the Wikipedia Source
+;; Define the Wikipedia source
 (consult-omni-define-source "Wikipedia"
                             :narrow-char ?w
                             :type 'dynamic

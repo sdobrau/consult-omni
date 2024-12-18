@@ -6,11 +6,23 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (consult-notmuch "0.8.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-notmuch "0.8.1")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-notmuch enables searching notmuch emails in consult-omni.
+;; It provides commands to search emails and getting the results
+;; directly in the minibuffer.
+;;
+;; For more info on notmuch see the following URLs:
+;; URL `https://github.com/notmuch/notmuch'
+;; URL `https://notmuchmail.org/notmuch-emacs/'
 
 ;;; Code:
 
@@ -19,50 +31,56 @@
 
 (defcustom consult-omni-notmuch-message-buffer-name "*consult-omni-notmuch-message*"
   "Name of consult-omni-notmuch preview buffer."
+  :group 'consult-omni
   :type 'string)
 
 (defcustom consult-omni-notmuch-tree-buffer-name "*consult-omni-notmuch-tree*"
   "Name of consult-omni-notmuch tree buffer."
+  :group 'consult-omni
   :type 'string)
 
 (defcustom consult-omni-notmuch-command (or notmuch-command "notmuch")
   "Name of the notmuch binary.
 
 By default inherits from `notmuch-command'."
+  :group 'consult-omni
   :type 'string)
 
 (defcustom consult-omni-notmuch-default-command-arg "search"
   "Default notmuch commandline arg for finding messages.
 Can be either “search” or “show”"
+  :group 'consult-omni
   :type  '(choice (const :tag "(Default) search" "search")
                   (const :tag "show" "show")))
 
 (defcustom consult-omni-notmuch-extra-command-args (list)
-"Extra notmuch commandline arguments."
- :type '(repeat (choice string)))
+  "Extra notmuch commandline arguments."
+  :group 'consult-omni
+  :type '(repeat (choice string)))
 
 (defcustom consult-omni-notmuch-default-count consult-omni-default-count
-   "Number of notmuch search results to retrieve.
+  "Number of notmuch search results to retrieve.
 
 By default inherits from `consult-omni-default-count'."
- :type 'integer)
+  :group 'consult-omni
+  :type 'integer)
 
 (defvar consult-omni--notmuch-format-func-alist '(("show" . consult-omni--notmuch-show-transform)
                                                   ("search" . consult-omni--notmuch-search-transform))
-"Alist for transfrom function of notmuch commandline output.")
+  "Alist of transfrom functions for notmuch commandline output.")
 
 (cl-defun consult-omni--notmuch-format-candidate (&rest args &key source query title from date tags face &allow-other-keys)
-  "Formats a candidate for `consult-omni-notmuch' commands.
+  "Format a candidate from `consult-omni-notmuch' with ARGS.
 
 Description of Arguments:
 
-  SOURCE the name to use (e.g. “YouTube”)
-  QUERY  the query input from the user
-  TITLE  the nootmuch title string of the message
-  FROM   the notmuch sender string of the message
-  DATE   the notmuch date string of the message
-  TAGS   a (list of) notmuch tag string(s) for message
-  FACE   the face to apply to TITLE"
+  SOURCE a string; the name to use (e.g. “YouTube”)
+  QUERY  a string; the query input from the user
+  TITLE  a string; the notmuch title string of the message
+  FROM   a string; the notmuch sender string of the message
+  DATE   a string; the notmuch date string of the message
+  TAGS   a list; a list of notmuch tag string(s) for message
+  FACE   a symbol; the face to apply to TITLE"
   (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (source (if (stringp source) (propertize source 'face 'consult-omni-source-type-face) nil))
          (match-str (if (and (stringp query) (not (equal query ".*"))) (consult--split-escaped query) nil))
@@ -86,16 +104,18 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((and (listp match-str) (stringp str))
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((and (stringp match-str) (stringp str))
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (defun consult-omni--notmuch-search-transform (candidates &optional query)
-  "Transforms “notmuch search” output to consult-omni's style.
+  "Transform CANDIDATES from “notmuch search” to consult-omni's style.
 
-Parses the output from command “notmuch search” and passes its components
-to  `consult-omni--notmuch-format-candidate'."
+QUERY is the user input string.
+
+Parses the output from command “notmuch search” and passes its
+components to  `consult-omni--notmuch-format-candidate'."
   (remove nil (remove "" (mapcar (lambda (item)
                                    (when (and (stringp item) (string-match "thread:" item))
                                      (let* ((source "notmuch")
@@ -129,7 +149,9 @@ to  `consult-omni--notmuch-format-candidate'."
                                  candidates))))
 
 (defun consult-omni--notmuch-show-transform (candidates &optional query)
-  "Transforms “notmuch show” output to consult-omni's style.
+  "Transform CANDIDATES from “notmuch show” to consult-omni's style.
+
+QUERY is the user input string.
 
 Parses the output from command “notmuch show” and passes its components
 to `consult-omni--notmuch-format-candidate'."
@@ -188,7 +210,7 @@ to `consult-omni--notmuch-format-candidate'."
                         candidates))))
 
 (defun consult-omni--notmuch-get-transform-func (&rest args)
-  "Gets the appropriate transform function for notmuch commands.
+  "Get the appropriate transform function for notmuch commands with ARGS.
 
 This is needed to get the right function for
 parsing outputs of “notmuch search”, and
@@ -196,7 +218,7 @@ parsing outputs of “notmuch search”, and
   (cdr (assoc consult-omni-notmuch-default-command-arg consult-omni--notmuch-format-func-alist)))
 
 (defun consult-omni--notmuch--preview (cand)
-  "Preview function for `consult-omni-notmuch' commands."
+  "Preview function for CAND from `consult-omni-notmuch'."
   (let* ((query (get-text-property 0 :query cand))
          (id (get-text-property 0 :id cand)))
     (when id
@@ -205,7 +227,7 @@ parsing outputs of “notmuch search”, and
       (notmuch-show id nil nil query consult-omni-notmuch-message-buffer-name))))
 
 (defun consult-omni--notmuch-callback (cand)
-  "Callback function for `consult-omni-notmuch' command."
+  "Callback function for CAND from `consult-omni-notmuch'."
   (let* ((query (get-text-property 0 :query cand))
          (id (get-text-property 0 :id cand)))
     (when id
@@ -214,7 +236,15 @@ parsing outputs of “notmuch search”, and
       (notmuch-tree query nil id consult-omni-notmuch-tree-buffer-name t nil nil nil))))
 
 (cl-defun consult-omni--notmuch-command-builder (input &rest args &key callback &allow-other-keys)
-  "Makes builder command line args for “notmuch”."
+  "Make builder command line args for “notmuch” with INPUT and ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (setq consult-notmuch--partial-parse nil)
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
@@ -229,7 +259,7 @@ parsing outputs of “notmuch search”, and
                (cmd (append (list notmuch-command) (list consult-omni-notmuch-default-command-arg) (when count (list "--limit" (format "%s" count))) (when (and page (not (equal page 0))) (list "--offset" (format "%s" page))) consult-omni-notmuch-extra-command-args (list query))))
     cmd))
 
-;; Define the Notmuch Source
+;; Define the notmuch source
 (consult-omni-define-source "notmuch"
                             :narrow-char ?m
                             :type 'async
@@ -248,7 +278,7 @@ parsing outputs of “notmuch search”, and
                             :interactive consult-omni-intereactive-commands-type
                             :transform (lambda (candidates &optional query) (funcall (consult-omni--notmuch-get-transform-func) candidates query))
                             :enabled (lambda () (and (bound-and-true-p notmuch-command)
-                                                (executable-find notmuch-command)))
+                                                     (executable-find notmuch-command)))
                             :annotate nil)
 
 ;;; provide `consult-omni-notmuch' module

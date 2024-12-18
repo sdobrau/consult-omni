@@ -6,11 +6,16 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-line-multi provides commands for searching lines in
+;; multiple buffers similar to consult-line-multi but using consult-omni.
 
 ;;; Code:
 
@@ -18,18 +23,21 @@
 (require 'consult-omni)
 
 (defun consult-omni--line-multi-candidates (input &optional buffers)
-  "Wrapper around consult--line-multi-candidates for consult-omni."
+  "Search for lines containing INPUT in multiple BUFFERS.
+
+This is a wrapper around `consult--line-multi-candidates' for
+consult-omni."
   (let  ((buffers (or buffers (consult--buffer-query :directory (consult--normalize-directory default-directory) :sort 'alpha-current))))
     (consult--line-multi-candidates buffers input)))
 
 (defun consult-omni--line-multi-preview (cand)
-  "Preview function for consult-omni-line-multi."
+  "Preview function for CAND from `consult-omni-line-multi'."
   (let* ((marker (car (get-text-property 0 :marker cand)))
          (query (get-text-property 0 :query cand)))
     (consult--jump marker)))
 
 (cl-defun consult-omni--line-multi-format-candidate (&rest args &key source query marker title face &allow-other-keys)
-  "Formats the cnaiddates of `consult-omni-line-multi'.
+  "Format the candidates of `consult-omni-line-multi' with ARGS.
 
 Description of Arguments:
 
@@ -58,15 +66,23 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (cl-defun consult-omni--line-multi-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetches search results for INPUT from `consult-line-multi'."
+  "Fetch search results for INPUT from `consult-line-multi' with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (unless (functionp 'consult-omni--line-multi-candidates)
-    (error "consult-omni: consult-omni-line-multi not available. Make sure `consult' is loaded properly"))
+    (error "Consult-omni: consult-omni-line-multi not available.  Make sure `consult' is loaded properly"))
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (items (consult-omni--line-multi-candidates query))

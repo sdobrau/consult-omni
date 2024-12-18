@@ -6,11 +6,19 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-scopus provides commands for searching Scopus database
+;; directly in Emacs using consult-omni as the frontend.
+;;
+;; See URL `https://dev.elsevier.com/' for more info on using Scopus.
 
 ;;; Code:
 
@@ -19,33 +27,35 @@
 (defcustom consult-omni-scopus-api-key nil
   "Key for Scopus API.
 
+Can be a key string or a function that returns a key string.
+
 See URL `https://dev.elsevier.com/documentation/SCOPUSSearchAPI.wadl' for more info"
   :group 'consult-omni
   :type '(choice (const :tag "Scopus API Key" string)
                  (function :tag "Custom Function")))
 
 (defvar consult-omni-scopus-search-url "https://www.scopus.com/record/display.uri?"
-"Search URL for Scopus.")
+  "Search URL for Scopus.")
 
 (defvar consult-omni-scopus-api-url "https://api.elsevier.com/content/search/scopus"
-"API URL for Scopus.")
+  "API URL for Scopus.")
 
 (cl-defun consult-omni--scopus-format-candidate (&rest args &key source query url search-url title authors date journal doi face &allow-other-keys)
-  "Returns a formatted string for candidates of `consult-omni-scopus'.
+  "Format a candidate from `consult-omni-scopus' with ARGS.
 
 Description of Arguments:
 
-  SOURCE     the name to use (e.g. “Scopus”)
-  QUERY      query input from the user
-  URL        the url of  candidate
-  SEARCH-URL the web search url
-             (e.g. https://www.scopus.com/record/display.uri?&eid=%s)
-  TITLE      the title of the result/paper (e.g. title of paper)
-  AUTHORS    the authors of the result/paper
-  DATE       the publish date of the result/paper
-  JOURNAL    the journal that the result/paper is published in
-  DOI        the doi of the result/paper
-  FACE       the face to apply to TITLE"
+  SOURCE     a string; the name to use (e.g. “Scopus”)
+  QUERY      a string; query input from the user
+  URL        a string; the url of  candidate
+  SEARCH-URL a string; the web search url
+             \(e.g. https://www.scopus.com/record/display.uri?&eid=%s\)
+  TITLE      a string; the title of the result/paper
+  AUTHORS    a string or list of strings; the authors of the result/paper
+  DATE       a string; the publish date of the result/paper
+  JOURNAL    a string; the journal that the result/paper is published in
+  DOI        a string; the doi of the result/paper
+  FACE       a symbol; the face to apply to TITLE"
   (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (source (if (stringp source) (propertize source 'face 'consult-omni-source-type-face) nil))
          (date (if (stringp date) (propertize date 'face 'consult-omni-date-face) nil))
@@ -70,27 +80,35 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (defun consult-omni--scopus-callback (cand)
-  "Callback function for `consult-omni-scopus'."
+  "Callback function for CAND from `consult-omni-scopus'."
   (let* ((doi (get-text-property 0 :doi cand))
          (url (if doi (consult-omni--doi-to-url doi)
                 (get-text-property 0 :url cand))))
     (funcall consult-omni-default-browse-function url)))
 
 (defun consult-omni--scopus-preview (cand)
-  "Preview function for `consult-omni-scopus'."
+  "Preview function for CAND from `consult-omni-scopus'."
   (let* ((doi (get-text-property 0 :doi cand))
          (url (if doi (consult-omni--doi-to-url doi)
                 (get-text-property 0 :url cand))))
     (funcall consult-omni-default-preview-function url)))
 
 (cl-defun consult-omni--scopus-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Retrieve search results from SCOPUS for INPUT."
+  "Fetch search results from SCOPUS for INPUT and ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -149,7 +167,7 @@ Description of Arguments:
                                              raw-results)))
                                  (funcall callback annotated-results))))))
 
-;; Define the Scopus Source
+;; Define the Scopus source
 (consult-omni-define-source "Scopus"
                             :narrow-char ?s
                             :type 'dynamic

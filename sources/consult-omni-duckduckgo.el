@@ -6,11 +6,17 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-duckduckgo provides commands for searching DuckDuckGo's
+;; “limited” API in Emacs using consult-omni.
 
 ;;; Code:
 
@@ -23,10 +29,18 @@
   "Search URL for DuckDuckGo.")
 
 (cl-defun consult-omni--duckduckgoapi-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetch search results got INPUT from DuckDuckGo limited API.
+  "Fetch search results for INPUT from DuckDuckGo limited API with ARGS.
 
 See URL `https://duckduckgo.com/duckduckgo-help-pages/settings/params/'
-for some limited documentation"
+for some limited documentation.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -71,7 +85,7 @@ for some limited documentation"
                                    (funcall callback annotated-results))
                                  annotated-results)))))
 
-;; Define the DuckDuckGo Source
+;; Define the DuckDuckGo API source
 (consult-omni-define-source "DuckDuckGo API"
                             :narrow-char ?d
                             :type 'dynamic

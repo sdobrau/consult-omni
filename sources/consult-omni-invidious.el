@@ -6,23 +6,33 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-invidious provides commands for searching Invidious in Emacs
+;; using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
 (defvar consult-omni-invidious-servers nil
-"List of “Invidious” API servers")
+  "List of “Invidious” API servers.")
+
 (defvar consult-omni-invidious-server-url "https://api.invidious.io/instances.json"
-"URL to fetch “Invidious” API servers")
+  "URL to fetch “Invidious” API servers.")
 
 (defun consult-omni--invidious-get-servers (&optional rotate)
-  "Get list of Invidious API servers."
+  "Get list of Invidious API servers.
+
+When ROTATE is no-nil roate the order of items in
+`consult-omni-invidious-server'."
   (when (and consult-omni-invidious-servers rotate)
     (setq consult-omni-invidious-servers
           (nconc (cdr consult-omni-invidious-servers)
@@ -44,23 +54,23 @@
                                              attrs))))))))
 
 (cl-defun consult-omni--invidious-format-candidate (&rest args &key source type query title snippet channeltitle date subcount videocount viewcount length face &allow-other-keys)
-  "Formats a candidate for `consult-omni-invidious' commands.
+  "Format a candidate for `consult-omni-invidious' commands with ARGS.
 
 Description of Arguments:
 
-  SOURCE       the name to use (e.g. “Invidious”)
-  TYPE         the type of candidate (e.g. video, channel, playlist)
-  QUERY        query input from the user
-               the search results of QUERY on the SOURCE website
-  TITLE        the title of the video
-  SNIPPET      a string containing a snippet/description of the video
-  CHANNELTITLE the name of the channel for the video
-  DATE         the publish date of the video
-  SUBCOUNT     the subscriber count fpr a channel
-  VIDEOCOUNT   the number of videos in a playlist
-  VIEWCOUNT    the number of times a video is viewed
-  LENGTH       the duration of a  video in seconds
-  FACE         the face to apply to TITLE"
+  SOURCE       a string; the name to use (e.g. “Invidious”)
+  TYPE         a string; the type of candidate
+               (e.g. video, channel, playlist)
+  QUERY        a string; query input from the user
+  TITLE        a string; the title of the video
+  SNIPPET      a string; a snippet/description of the video
+  CHANNELTITLE a string; the name of the channel for the video
+  DATE         a string; the publish date of the video
+  SUBCOUNT     an integer; the subscriber count fpr a channel
+  VIDEOCOUNT   an integer; the number of videos in a playlist
+  VIEWCOUNT    an integer; the number of times a video is viewed
+  LENGTH       a number; the duration of a video in seconds
+  FACE         a symbol; the face to apply to TITLE"
   (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (source (propertize source 'face 'consult-omni-source-type-face))
          (match-str (if (and (stringp query) (not (equal query ".*"))) (consult--split-escaped query) nil))
@@ -102,13 +112,21 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (cl-defun consult-omni--invidious-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetches search results for INPUT from “Invidious” service."
+  "Fetch search results for INPUT from “Invidious” service with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -201,7 +219,7 @@ Description of Arguments:
                                    (funcall callback annotated-results))
                                  annotated-results)))))
 
-;; Define the Invidious Source
+;; Define the Invidious source
 (consult-omni-define-source "Invidious"
                             :narrow-char ?y
                             :type 'dynamic

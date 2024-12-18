@@ -6,18 +6,24 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-google-autosuggest provides commands for getting
+;; autosuggestion from Google in Emacs using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
 (defvar consult-omni-google-autosuggest-api-url "http://suggestqueries.google.com/complete/search"
-"API URL for Google AutoSuggest")
+  "API URL for Google AutoSuggest.")
 
 (defun consult-omni--google-autosuggest-new (cand)
   "Return CAND for NEW non-existing candidates."
@@ -26,9 +32,17 @@
       cand))
 
 (cl-defun consult-omni--google-autosuggest-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetch search results for INPUT from Google Autosuggest.
+  "Fetch search results from Google Autosuggest for INPUT with ARGS.
 
-Uses `consult-omni-google-autosuggest-api-url' as autosuggest api url."
+Uses `consult-omni-google-autosuggest-api-url' as autosuggest api url.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -73,7 +87,7 @@ Uses `consult-omni-google-autosuggest-api-url' as autosuggest api url."
                                  (funcall callback annotated-results)
                                  annotated-results)))))
 
-;; Define the Google AutoSuggest Source
+;; Define the Google AutoSuggest source
 (consult-omni-define-source "Google AutoSuggest"
                             :narrow-char ?G
                             :type 'dynamic

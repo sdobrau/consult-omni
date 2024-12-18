@@ -6,11 +6,17 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-stackoverflow provides commands for searching StackOverflow
+;; directly in Emacs using consult-omni as the frontend.
 
 ;;; Code:
 
@@ -19,6 +25,8 @@
 (defcustom consult-omni-stackexchange-api-key nil
   "Key for Stack Exchange API.
 
+Can be a key string or a function that returns a key string.
+
 See URL `https://api.stackexchange.com/', and
 URL `https://stackapps.com/' for more info."
   :group 'consult-omni
@@ -26,32 +34,32 @@ URL `https://stackapps.com/' for more info."
                  (function :tag "Custom Function")))
 
 (defvar consult-omni-stackoverflow-search-url "https://stackoverflow.com/search"
-  "Search URL for StackOverflow")
+  "Search URL for StackOverflow.")
 
 (defvar consult-omni-stackoverflow-api-url "https://api.stackexchange.com/2.3/search/advanced"
-  "API URL for StackOverflow")
+  "API URL for StackOverflow.")
 
 (defvar consult-omni-stackoverflow-answered-mark "+"
-  "Mark for answered StackOverflow's questions")
+  "Mark for answered StackOverflow's questions.")
 
 (defvar consult-omni-stackoverflow-unanswered-mark "x"
-  "Mark for unanswered StackOverflow's questions")
+  "Mark for unanswered StackOverflow's questions.")
 
 (cl-defun consult-omni--stackoverflow-format-candidate (&rest args &key source query url search-url title snippet date answered score face &allow-other-keys)
-  "Returns a formatted string for “StackOverflow” searches.
+  "Format a candidate from “StackOverflow” search with ARGS.
 
 Description of Arguments:
 
-  SOURCE     the name to use (e.g. “StackOveflow”)
-  QUERY      query input from the user
-  URL        a string pointing to url of the candidate
-  SEARCH-URL the web search url
-  TITLE      the title of the result/paper (e.g. title of paper)
-  SNIPPET    a string containing a snippet/description of candidate
-  DATE       a date string of candidate
-  ANSWERED   whether the question is answered on StackOveflow
-  SCORE      score of the question on StackOverflow
-  FACE       the face to apply to TITLE"
+  SOURCE     a string; the source name \(e.g. “StackOveflow”\)
+  QUERY      a string; query input from the user
+  URL        a string; the URL of the candidate
+  SEARCH-URL a string; the web search URL
+  TITLE      a string; the title of the StackOverflow topic
+  SNIPPET    a string; a snippet/description of the StackOverflow topic
+  DATE       a string; the date string of the StackOverflow topic
+  ANSWERED   a boolean; whether the question is answered on StackOveflow
+  SCORE      a number; the score of the question on StackOverflow
+  FACE       a symbol; the face to apply to TITLE"
   (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (source (and (stringp source) (propertize source 'face 'consult-omni-source-type-face)))
          (date (and (stringp date) (propertize date 'face 'consult-omni-date-face)))
@@ -70,14 +78,23 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (cl-defun consult-omni--stackoverflow-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetch search results for INPUT from StackOverflow.
-See URL `https://api.stackexchange.com/' for more info."
+  "Fetch search results for INPUT from StackOverflow with ARGS.
+
+See URL `https://api.stackexchange.com/' for more info.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -135,7 +152,7 @@ See URL `https://api.stackexchange.com/' for more info."
                                    (funcall callback annotated-results))
                                  annotated-results)))))
 
-;; Define the StackOverflow Source
+;; Define the StackOverflow source
 (consult-omni-define-source "StackOverflow"
                             :narrow-char ?s
                             :type 'dynamic

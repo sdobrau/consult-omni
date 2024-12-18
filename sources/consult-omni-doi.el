@@ -6,21 +6,30 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-doi enables looking up DOIs in consult-omni.
+;; It provides commands to search DOIs using DOI.org as the backend.
+;;
+;; For more info DOI see:
+;; URL `https://www.doi.org/'
 
 ;;; Code:
 
 (require 'consult-omni)
 
 (defvar consult-omni-doiorg-api-url "https://doi.org/api/handles/"
-"API URL for DOI.org")
+  "API URL for “DOI.org”.")
 
 (defvar consult-omni-doiorg-search-url "https://doi.org/"
-"Search URL for DOI.org")
+  "Search URL for “DOI.org”.")
 
 (defvar consult-omni--doi-search-history (list)
   "History variables for search terms of `consult-omni-doi'.")
@@ -49,9 +58,17 @@
                                                                    raw-results)))))
                                    result))))))
 
-(cl-defun consult-omni--doiorg-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetch target url of DOI."
-  (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
+(cl-defun consult-omni--doiorg-fetch-results (doi &rest args &key callback &allow-other-keys)
+  "Fetch target url of DOI with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
+  (pcase-let* ((`(,query . ,opts) (consult-omni--split-command doi (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (source "doiorg")
                (url (consult-omni--doi-to-url query))
@@ -67,7 +84,7 @@
     (when url
       (list annotated-results))))
 
-;; Define the DOI.org Source
+;; Define the doiorg (for DOI.org) source
 (consult-omni-define-source "doiorg"
                             :narrow-char ?D
                             :type 'sync

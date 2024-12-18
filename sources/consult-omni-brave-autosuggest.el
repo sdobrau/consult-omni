@@ -6,31 +6,40 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-brave-autosuggest provides commands for getting
+;; autosuggestion from Brave in Emacs using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
+;;; User Options (a.k.a. Custom Variables)
 (defcustom consult-omni-brave-autosuggest-api-key nil
   "Key for Brave Autosuggest API.
 
-See URL `https://brave.com/search/api/' for more info"
+Can be a key string or a function that returns a key string.
+
+Refer to URL `https://brave.com/search/api/' for more info on getting an API key."
   :group 'consult-omni
-  :type '(choice (const :tag "Brave Autosuggest API Key" string)
+  :type '(choice (string :tag "Brave Autosuggest API Key")
                  (function :tag "Custom Function")))
 
 (defvar consult-omni-brave-autosuggest-api-url "https://api.search.brave.com/res/v1/suggest/search"
-"API URL for Brave AutoSuggest")
+  "API URL for Brave AutoSuggest.")
 
 (defun consult-omni--brave-autosuggest-return (cand)
-  "Return the string of CAND with no properties"
-(when (stringp cand)
-  (substring-no-properties (string-trim cand))))
+  "Return the string of CAND with no properties."
+  (when (stringp cand)
+    (substring-no-properties (string-trim cand))))
 
 (defun consult-omni--brave-autosuggest-new (cand)
   "Return CAND for NEW non-existing candidates."
@@ -39,7 +48,15 @@ See URL `https://brave.com/search/api/' for more info"
       cand))
 
 (cl-defun consult-omni--brave-autosuggest-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetch search results for INPUT from Brave Autosuggest API."
+  "Fetch search results for INPUT from Brave Autosuggest API with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
