@@ -13,7 +13,10 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -2965,7 +2968,11 @@ ARGS."
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -3406,7 +3413,11 @@ Can be:
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -3503,7 +3514,11 @@ is nil as well, loads `consult-omni-sources--all-modules-list'."
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -3924,7 +3939,11 @@ to update list of candidates in the minibuffer."
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -4064,7 +4083,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -4203,7 +4226,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -4363,7 +4390,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (browser-hist "0.0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (browser-hist "0.0.1")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -4492,7 +4524,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -4708,7 +4744,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -4899,7 +4939,10 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -5056,7 +5099,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -5227,7 +5274,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -5372,7 +5423,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -5521,7 +5576,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -5619,7 +5678,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;        (emacs "28.1")
+;;        (consult "1.4")
+;;        (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -5814,7 +5877,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -5966,7 +6033,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -6118,7 +6189,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -6247,7 +6322,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -6345,7 +6424,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -6568,7 +6651,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (consult-notes "0.7"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-notes "0.7")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -6764,7 +6852,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (consult-gh "2.0"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-gh "2.0")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -6902,7 +6995,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-mu "1.0") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-mu "1.0")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -7078,7 +7176,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (gptel "0.7.0"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (gptel "0.7.0")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -7442,7 +7545,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -7574,7 +7681,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -7703,7 +7814,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (elfeed "3.4.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (elfeed "3.4.1")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni/blob/main/consult-omni-sources
 ;; Keywords: convenience
 
@@ -7915,7 +8031,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -8082,7 +8202,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -8218,7 +8342,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (gptel "0.7.0"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (gptel "0.7.0")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -8551,7 +8680,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -8823,7 +8956,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -9039,7 +9176,12 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1") (consult-notmuch "0.8.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-notmuch "0.8.1")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -9369,7 +9511,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -9499,7 +9645,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -10010,7 +10160,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -10330,7 +10484,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -10611,7 +10769,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -10837,7 +10999,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -11039,7 +11205,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
@@ -11209,7 +11379,11 @@ well as the function
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4") (consult-omni "0.1"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4")
+;;         (consult-omni "0.1"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 

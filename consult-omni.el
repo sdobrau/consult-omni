@@ -6,7 +6,10 @@
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (consult "1.4"))
+;; Package-Requires: (
+;;         (emacs "28.1")
+;;         (consult "1.4"))
+;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
 
