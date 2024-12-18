@@ -11,25 +11,41 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-brave provides commands for searching Brave in Emacs using
+;; consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
+;;; User Options (a.k.a. Custom Variables)
 (defcustom consult-omni-brave-api-key nil
   "Key for Brave API.
 
-See URL `https://brave.com/search/api/' for more info"
+Can be a key string or a function that returns a key string.
+
+Refer to URL `https://brave.com/search/api/' for more info on getting an
+API key."
   :group 'consult-omni
-  :type '(choice (const :tag "Brave API Key" string)
+  :type '(choice (string :tag "Brave API Key")
                  (function :tag "Custom Function")))
 
-(defvar consult-omni-brave-search-url "https://search.brave.com/search")
+(defvar consult-omni-brave-search-url "https://search.brave.com/search"
+"Web search URL for Brave.")
 
-(defvar consult-omni-brave-url "https://api.search.brave.com/res/v1/web/search")
+(defvar consult-omni-brave-url "https://api.search.brave.com/res/v1/web/search"
+"API URL for Brave.")
 
 (cl-defun consult-omni--brave-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Retrieve search results from Brave for INPUT."
+  "Fetch search results from Brave for INPUT with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -47,32 +63,32 @@ See URL `https://brave.com/search/api/' for more info"
                           ("Accept-Encoding" . "gzip")
                           ("X-Subscription-Token" . ,(consult-omni-expand-variable-function consult-omni-brave-api-key)))))
     (consult-omni--fetch-url consult-omni-brave-url consult-omni-http-retrieve-backend
-      :encoding 'utf-8
-      :params params
-      :headers headers
-      :parser #'consult-omni--json-parse-buffer
-      :callback
-      (lambda (attrs)
-        (when-let* ((raw-results (map-nested-elt attrs '("web" "results")))
-                    (annotated-results
-                     (mapcar (lambda (item)
-                               (let*
-                                   ((source "Brave")
-                                    (url (gethash "url" item))
-                                    (title (gethash "title" item))
-                                    (snippet (gethash "description" item))
-                                    (search-url (consult-omni--make-url-string consult-omni-brave-search-url params))
-                                    (decorated (funcall consult-omni-default-format-candidate :source source :query query :url url :search-url search-url :title title :snippet snippet)))
-                                 (propertize decorated
-                                             :source source
-                                             :title title
-                                             :url url
-                                             :search-url search-url
-                                             :query query
-                                             :snippet snippet)))
-                             raw-results)))
-          (funcall callback annotated-results)
-          annotated-results)))))
+                             :encoding 'utf-8
+                             :params params
+                             :headers headers
+                             :parser #'consult-omni--json-parse-buffer
+                             :callback
+                             (lambda (attrs)
+                               (when-let* ((raw-results (map-nested-elt attrs '("web" "results")))
+                                           (annotated-results
+                                            (mapcar (lambda (item)
+                                                      (let*
+                                                          ((source "Brave")
+                                                           (url (gethash "url" item))
+                                                           (title (gethash "title" item))
+                                                           (snippet (gethash "description" item))
+                                                           (search-url (consult-omni--make-url-string consult-omni-brave-search-url params))
+                                                           (decorated (funcall consult-omni-default-format-candidate :source source :query query :url url :search-url search-url :title title :snippet snippet)))
+                                                        (propertize decorated
+                                                                    :source source
+                                                                    :title title
+                                                                    :url url
+                                                                    :search-url search-url
+                                                                    :query query
+                                                                    :snippet snippet)))
+                                                    raw-results)))
+                                 (funcall callback annotated-results)
+                                 annotated-results)))))
 
 ;; Define the Brave Source
 (consult-omni-define-source "Brave"

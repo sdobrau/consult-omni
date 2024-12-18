@@ -11,6 +11,8 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-calc provides commands for getting calc results directly
+;; in the minibuffer using consult-omni.
 
 ;;; Code:
 
@@ -18,36 +20,102 @@
 (require 'calc)
 (require 'calc-aent nil t)
 
+;;; User Options (a.k.a. Custom Variables)
+
 (defcustom consult-omni-calc-number-only nil
-  "Only show calculator results when the query result in a nunmber?"
+  "Only show calculator results when the query result is a number?"
+  :group 'consult-omni
   :type 'boolean)
 
 (defcustom consult-omni-calc-regexp-pattern "^=\\(.*\\)?"
   "Regexp to detect calculator formula?
 
 The first capturing group will be used as input for `calc-eval'.
-If there is no capture group, the whole input query."
+If there is no capture group, the whole input query is used.
+
+Note that the default setting is simply any string with a leading “=”.
+This allows the user to see the results from calculator \(i.e.
+`consult-omni--calc-fetch-results')\ from any string without consult-omni
+detecting (i.e. trying to guess) what is a mathematical equation.  This
+can specially be useful in multi-source searches, if the user does not
+want to see random results from the calculator on every search string.
+The downside of this approach is that the user has to type “=” every time
+before seeing results form the calculator.  For example to see the result
+of the equation 2+3, the user has to type:
+  “#=2+3”
+\(Note that the leading “#” above is from the default perl style of
+`consult-async-split-style' and otherwise not neccessary\).
+
+Alternatively, one can change this cariable to regexp pattern that
+detects/guesses a mathematical equation \(for example by looking for
+strings that contain digits and/or mathematical operators\).  For an
+example, see the default choices for this custom variable.  This would
+remove the need to type a leading character evertytime but at the same
+time may miss some edge cases if the user's query/equation does not match
+this regexp.
+
+To be safe the default setting of this variable uses the former approach
+with a leading “=” character."
+
+  :group 'consult-omni
   :type '(choice (regexp :tag "(Default) formula after =" "^=\\(.*\\)?")
                  (regexp :tag "Any string with digits, operators or brackets" "\\(.*[[:digit:]\/\*\+-=%^&$\(\{\[].*\\)")))
 
 (defcustom consult-omni-calc-message-errors nil
   "Whether to message errors for calc?
 
-Setting this to non-nil will show messages
-when the calcultor cannot find results"
+Setting this to non-nil will show messages when the calcultor cannot find
+results, which may not be desirable in multi-source omni searches."
+  :group 'consult-omni
   :type 'boolean)
 
 (defun consult-omni--calc-callback (cand)
-  "Copys the result as well as formula to kill ring."
+  "Copy the result, CAND, as well as the equation to the `kill-ring'."
   (let ((equ (get-text-property 0 :query cand))
         (result  (get-text-property 0 :title cand)))
-  (kill-new (concat equ " => " result))
-  (kill-new result)))
+    (kill-new (concat equ " => " result))
+    (kill-new result)))
 
 (cl-defun consult-omni--calc-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Calculate the result of possible math equations.
+  "Calculate the result of possible math equations in INPUT with ARGS.
 
-This uses `calc-eval' to return the result of input"
+This uses `calc-eval' to return the result of the INPUT string.  The INPUT
+should match `consult-omni-calc-regexp-pattern', which by default has a
+leading “=”.  For example to see the result of the equation 2+3, the user
+should type:
+  “#=2+3”
+\(Note that the leading “#” above is from the default perl style of
+`consult-async-split-style' and otherwise not neccessary\).
+
+For more details on how to type equations refer to `calc-eval'
+documentation on input strings and Emacs manual for calc in general as
+well as this package's repo:
+URL `https://github.com/armindarvish/consult-omni'
+
+To change this behavior, `consult-omni-calc-regexp-pattern' can be edited.
+For example, to remove the leading “=”, in which case the user can simply
+enter “2+3” to see the results.  Keep in mind that the densures that
+consult-omni-calc returns results only when the user intends the query as
+a calc equation.  Removing “=”, may sometimes lead to confusing answers
+from the calculator in multi-source searches, because it passes the INPUT
+query to `calc-eval', which in turn tries its best to interpret the INPUT
+as a mathematical equation.
+
+For unit conversion, the INPUT should contain “:convert” keyword with unit
+value as an optional argument using consult's syntax.  See the documention
+of `consult-omni-multi' for how to pass extra arguments using
+`consult-async-split-style' syntax.
+For example:
+ “#=100degF -- :convert degC”
+converts 100 Farenheit to Celsius.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (source "calc")
                (opts (car-safe opts))
@@ -82,15 +150,15 @@ This uses `calc-eval' to return the result of input"
             (if consult-omni-calc-number-only
                 (setq result (apply #'calc-eval (list query) 'num extra-args))
               (setq result (apply #'calc-eval (list query) nil extra-args))))
-        ('error (and consult-omni-calc-message-errors (message (error-message-string err)))))
-    (when result (setq annotated-result (propertize result
-                                                    :source source
-                                                    :title result
-                                                    :url nil
-                                                    :query query)))
-    (if annotated-result
-        (list annotated-result)
-      nil))))
+        (error (and consult-omni-calc-message-errors (message (error-message-string err)))))
+      (when result (setq annotated-result (propertize result
+                                                      :source source
+                                                      :title result
+                                                      :url nil
+                                                      :query query)))
+      (if annotated-result
+          (list annotated-result)
+        nil))))
 
 ;; Define the Calc Source
 (consult-omni-define-source "calc"

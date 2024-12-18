@@ -11,13 +11,17 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-youtube provides commands for searching YouTube in Emacs
+;; using consult-omni as the frontend.
 
 ;;; Code:
 
 (require 'consult-omni)
 
 (defcustom consult-omni-youtube-search-key nil
-  "Key for “YouTube Data API”
+  "Key for “YouTube Data API”.
+
+Can be a key string or a function that returns a key string.
 
 See URL `https://developers.google.com/youtube/v3/getting-started'
 for details"
@@ -26,7 +30,7 @@ for details"
                  (function :tag "Custom Function")))
 
 (defcustom consult-omni-youtube-search-command #'consult-omni--youtube-fetch-results-details
-  "Command to use to get results from “YouTube Data API”"
+  "Command to use to get results from “YouTube Data API”."
   :group 'consult-omni
   :type '(choice (function :tag "(Default) Detailed Results with stats" #'consult-omni--youtube-fetch-results-details)
                  (function :tag "Simple Results without stats"  #'consult-omni--youtube-fetch-results-simple)
@@ -57,22 +61,23 @@ for details"
   "API URL for YouTube Channels.")
 
 (cl-defun consult-omni--youtube-format-candidate (&rest args &key source type query title snippet channeltitle date length subcount videocount viewcount face &allow-other-keys)
-"Formats a candidate for `consult-omni-youtube' commands.
+  "Format a candidate from `consult-omni-youtube' with ARGS.
 
 Description of Arguments:
 
-  SOURCE       the name to use (e.g. “YouTube”)
-  TYPE         the type of candidate (e.g. video, channel, playlist)
-  QUERY        the query input from the user
-  TITLE        the title of the video
-  SNIPPET      string containing a snippet/description of the video
-  CHANNELTITLE the name of the channel for the video
-  DATE         the publish date of the video
-  LENGTH       the duration of a  video in seconds
-  SUBCOUNT     the subscriber count fpr a channel
-  VIDEOCOUNT   the number of videos in a playlist
-  VIEWCOUNT    the number of times a video is viewed
-  FACE         the face to apply to TITLE"
+  SOURCE       a string; the name to use (e.g. “YouTube”)
+  TYPE         a string; the type of candidate
+               \(e.g. video, channel, playlist\)
+  QUERY        a string; the query input from the user
+  TITLE        a string; the title of the video
+  SNIPPET      a string; a snippet/description of the video
+  CHANNELTITLE a string; the name of the channel for the video
+  DATE         a string; the publish date of the video
+  LENGTH       a number or string; the duration of a  video in seconds
+  SUBCOUNT     an integer; the subscriber count for a channel
+  VIDEOCOUNT   an integer; the number of videos in a playlist
+  VIEWCOUNT    an integer; the number of times a video is viewed
+  FACE         a symbol; the face to apply to TITLE"
   (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (source (propertize source 'face 'consult-omni-source-type-face))
          (match-str (if (and (stringp query) (not (equal query ".*"))) (consult--split-escaped query) nil))
@@ -85,14 +90,14 @@ Description of Arguments:
          (viewcount-str (and viewcount (consult-omni--numbers-human-readable (or viewcount 0) "views")))
          (subcount-str (and subcount (consult-omni--numbers-human-readable (or subcount 0) "subs")))
          (stats (and type
-                    (stringp type)
-                    (propertize
-                     (consult-omni--set-string-width (pcase type
-                      ("video" (format "%s" (or viewcount-str "0 views")))
-                      ("playlist" (format "%s" (or videocount-str "0 videos")))
-                      ("channel" (format "%s" (or subcount-str "0 subscriptions")))
-                      (_ "")) 10)
-                     'face 'consult-omni-domain-face)))
+                     (stringp type)
+                     (propertize
+                      (consult-omni--set-string-width (pcase type
+                                                        ("video" (format "%s" (or viewcount-str "0 views")))
+                                                        ("playlist" (format "%s" (or videocount-str "0 videos")))
+                                                        ("channel" (format "%s" (or subcount-str "0 subscriptions")))
+                                                        (_ "")) 10)
+                      'face 'consult-omni-domain-face)))
          (length (or
                   (and (equal type "playlist") "[PLAYLIST]")
                   (and (equal type "channel") "(CHANNEL)")
@@ -111,16 +116,24 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (cl-defun consult-omni--youtube-fetch-results-simple (input &rest args &key callback &allow-other-keys)
-  "Fetches search results for INPUT from “YouTube Data API” service.
+  "Fetch search results for INPUT and ARGS from “YouTube Data API” service.
 
 This is a simpler version that does not show details
-such as viw counts and duration, ... of videos/playlists, etc."
+such as view counts and duration, ... of videos/playlists, etc.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -192,7 +205,17 @@ such as viw counts and duration, ... of videos/playlists, etc."
                                  annotated-results)))))
 
 (cl-defun consult-omni--youtube-fetch-video-details (videoids &rest args &key callback query &allow-other-keys)
-  "Fetches details with VIDEOIDS from “YouTube Data API” service."
+  "Fetch details with VIDEOIDS and ARGS from “YouTube Data API” service.
+
+QUERY is the user input string.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((params `(("part" . "snippet,statistics,contentDetails")
                          ("key" . ,(consult-omni-expand-variable-function consult-omni-youtube-search-key))
                          ("id" . ,(string-join videoids ","))))
@@ -244,8 +267,17 @@ such as viw counts and duration, ... of videos/playlists, etc."
                                    (funcall callback annotated-results))
                                  annotated-results)))))
 
-(cl-defun consult-omni--youtube-fetch-playlist-details (playlistids &rest args &key callback query candidates &allow-other-keys)
-  "Fetches details with PLAYLISTIDS from “YouTube Data API” service."
+(cl-defun consult-omni--youtube-fetch-playlist-details (playlistids &rest args &key callback query &allow-other-keys)
+  "Fetch details with PLAYLISTIDS and ARGS from “YouTube Data API”.
+
+QUERY is th euser input string and CANDIDATES
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((params `(("part" . "snippet,contentDetails")
                          ("key" . ,(consult-omni-expand-variable-function consult-omni-youtube-search-key))
                          ("id" . ,(string-join playlistids ","))))
@@ -293,8 +325,18 @@ such as viw counts and duration, ... of videos/playlists, etc."
                                    (funcall callback annotated-results))
                                  annotated-results)))))
 
-(cl-defun consult-omni--youtube-fetch-channel-details (channelids &rest args &key callback query candidates &allow-other-keys)
-  "Fetches  details with CHANNELIDS from “YouTube Data API” service."
+(cl-defun consult-omni--youtube-fetch-channel-details (channelids &rest args &key callback query &allow-other-keys)
+  "Fetch details with CHANNELIDS and ARGS from “YouTube Data API”.
+
+QUERY is the user's input string.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((params `(("part" . "snippet,statistics")
                          ("key" . ,(consult-omni-expand-variable-function consult-omni-youtube-search-key))
                          ("id" . ,(string-join channelids ","))))
@@ -344,10 +386,18 @@ such as viw counts and duration, ... of videos/playlists, etc."
                                  annotated-results)))))
 
 (cl-defun consult-omni--youtube-fetch-results-details (input &rest args &key callback &allow-other-keys)
-  "Fetches search results for INPUT from “YouTube Data API” service.
+  "Fetch search results for INPUT and ARGS from “YouTube Data API”.
 
-This is a version with  statistics (e.g. view counts)
- and more details on videos, playlsits, etc."
+This is a version with  statistics \(e.g. view counts\) and more details
+on videos, playlsits, etc.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (videos (make-vector 1 (list)))
@@ -393,17 +443,17 @@ This is a version with  statistics (e.g. view counts)
                                       (videoids (list))
                                       (playlistids (list))
                                       (channelids (list)))
-                                 (mapcar (lambda (item)
-                                           (let* ((kind (gethash "kind" (gethash "id" item)))
-                                                  (type (string-trim-left kind "youtube#")))
-                                             (pcase type
-                                               ("video"
-                                                (push (gethash "videoId" (gethash "id" item)) videoids))
-                                               ("playlist"
-                                                (push (gethash "playlistId" (gethash "id" item)) playlistids))
-                                               ("channel"
-                                                (push (gethash "channelId" (gethash "id" item)) channelids)))
-                                             )) raw-results)
+                                 (mapc (lambda (item)
+                                         (let* ((kind (gethash "kind" (gethash "id" item)))
+                                                (type (string-trim-left kind "youtube#")))
+                                           (pcase type
+                                             ("video"
+                                              (push (gethash "videoId" (gethash "id" item)) videoids))
+                                             ("playlist"
+                                              (push (gethash "playlistId" (gethash "id" item)) playlistids))
+                                             ("channel"
+                                              (push (gethash "channelId" (gethash "id" item)) channelids)))
+                                           )) raw-results)
                                  (when videoids
                                    (consult-omni--youtube-fetch-video-details videoids :callback callback :query query))
                                  (when playlistids
@@ -411,7 +461,7 @@ This is a version with  statistics (e.g. view counts)
                                  (when channelids
                                    (consult-omni--youtube-fetch-channel-details channelids :callback callback :query query)))))))
 
-;; Define the YouTube Source
+;; Define the YouTube source
 (consult-omni-define-source "YouTube"
                             :narrow-char ?y
                             :type 'dynamic

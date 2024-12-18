@@ -11,6 +11,8 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-pubmed provides commands for searching PubMed database
+;; directly in Emacs using consult-omni as the frontend.
 
 ;;; Code:
 
@@ -25,16 +27,16 @@ See URL `https://www.ncbi.nlm.nih.gov/books/NBK25501/' for more info"
                  (function :tag "Custom Function")))
 
 (defvar consult-omni-pubmed-search-url "https://pubmed.ncbi.nlm.nih.gov/"
-"Search URL for PubMed")
+  "Search URL for PubMed.")
 
 (defvar  consult-omni-pubmed-esearch-api-url "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-"API URL for PubMed Eutils Entrez Esearch")
+  "API URL for PubMed Eutils Entrez Esearch.")
 
 (defvar consult-omni-pubmed-esummary-api-url "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
-"API URL for PubMed Eutils Entrez Esummary")
+  "API URL for PubMed Eutils Entrez Esummary.")
 
 (cl-defun consult-omni-dynamic--pubmed-format-candidate (&rest args &key source query url search-url title authors date journal doi face &allow-other-keys)
-  "Returns a formatted string for candidates of `consult-omni-pubmed'.
+  "Format candidates from `consult-omni-pubmed' with ARGS.
 
 Description of Arguments:
 
@@ -73,15 +75,15 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (cl-defun consult-omni--pubmed-esearch-fetch-results (input &rest args &key db &allow-other-keys)
-  "Fetches “esearch” results for INPUT from PubMed Entrez Utilities service.
+  "Fetch “esearch” results for INPUT and ARGS from PubMed Entrez Utilities.
 
-DB is passed as db in query parameters. (This is the database to search.)
+DB is passed as db in query parameters \(This is the database to search\).
 
 Refer to URL `https://www.ncbi.nlm.nih.gov/books/NBK25501/'
 for more info."
@@ -121,16 +123,24 @@ for more info."
          `(:webenv ,webenv :qk ,qk :idlist ,idlist))))))
 
 (cl-defun consult-omni--pubmed-esummary-fetch-results (input &rest args &key callback webenv qk db &allow-other-keys)
-  "Fetches “esummary” results for INPUT from PubMed Entrez Utilities service.
+  "Fetch “esummary” results for INPUT and ARGS from PubMed Entrez.
 
 Description of Arguments:
 
-  WEBENV passed as webenv in query parameters
-  qk     passed as qk in query parameters
-  DB     passed as db in query parameters. (This is the databes to search.)
+  WEBENV a string; passed as webenv in query parameters
+  qk     a string; passed as qk in query parameters
+  DB     a string; passed as db in query parameters.
 
 Refer to URL `https://www.ncbi.nlm.nih.gov/books/NBK25501/'
-for more info."
+for more info.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback :webenv webenv :qk qk :db db))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -195,29 +205,37 @@ for more info."
                                  annotated-results)))))
 
 (cl-defun consult-omni--pubmed-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetches results for INPUT from PubMed using Entrez Utilities service."
+  "Fetch results for INPUT and ARGS from PubMed Entrez Utilities.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (let* ((esearch (consult-omni--pubmed-esearch-fetch-results input))
          (webenv (plist-get esearch :webenv))
          (qk (plist-get esearch :qk)))
     (consult-omni--pubmed-esummary-fetch-results input :callback callback :webenv webenv :qk qk)))
 
-;; Define the PubMed Source
+;; Define the PubMed source
 (consult-omni-define-source "PubMed"
-                           :narrow-char ?p
-                           :type 'dynamic
-                           :require-match nil
-                           :category 'consult-omni-scholar
-                           :face 'consult-omni-scholar-title-face
-                           :request #'consult-omni--pubmed-fetch-results
-                           :on-new (apply-partially #'consult-omni-external-search-with-engine "PubMed")
-                           :preview-key consult-omni-preview-key
-                           :search-hist 'consult-omni--search-history
-                           :select-hist 'consult-omni--selection-history
-                           :enabled (lambda () (bound-and-true-p consult-omni-pubmed-api-key))
-                           :group #'consult-omni--group-function
-                           :sort t
-                           :interactive consult-omni-intereactive-commands-type
-                           :annotate nil)
+                            :narrow-char ?p
+                            :type 'dynamic
+                            :require-match nil
+                            :category 'consult-omni-scholar
+                            :face 'consult-omni-scholar-title-face
+                            :request #'consult-omni--pubmed-fetch-results
+                            :on-new (apply-partially #'consult-omni-external-search-with-engine "PubMed")
+                            :preview-key consult-omni-preview-key
+                            :search-hist 'consult-omni--search-history
+                            :select-hist 'consult-omni--selection-history
+                            :enabled (lambda () (bound-and-true-p consult-omni-pubmed-api-key))
+                            :group #'consult-omni--group-function
+                            :sort t
+                            :interactive consult-omni-intereactive-commands-type
+                            :annotate nil)
 
 ;;; provide `consult-omni-pubmed' module
 

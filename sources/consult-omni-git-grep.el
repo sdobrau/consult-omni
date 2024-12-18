@@ -11,6 +11,9 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-git-grep provides commands for running “git grep” shell
+;; commands similar to consult-git-grep but using consult-omni.
+
 
 ;;; Code:
 
@@ -18,11 +21,19 @@
 (require 'consult-omni-grep)
 
 (defun consult-omni--git-grep-transform (candidates &optional query)
-  "Formats candidates of `consult-omni-git-grep'."
+  "Format CANDIDATES of `consult-omni-git-grep' from QUERY."
   (consult-omni--grep-format candidates :source "git-grep" :query query :regexp-pattern consult--grep-match-regexp))
 
 (cl-defun consult-omni--git-grep-builder (input &rest args &key callback &allow-other-keys)
-  "Makes builder command line args for “git-grep”."
+  "Make builder command line args for “git-grep” from INPUT with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -33,7 +44,7 @@
                (default-directory (or dir default-directory)))
     (funcall (consult-omni--grep-make-builder #'consult--git-grep-make-builder dir) query)))
 
-;; Define the Ripgrep Source
+;; Define the git-grep Source
 (consult-omni-define-source "git-grep"
                             :narrow-char ?r
                             :type 'async

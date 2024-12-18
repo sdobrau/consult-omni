@@ -11,6 +11,12 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-consult-notes enables using consult-notes in consult-omni.
+;; It provides commands to search note files using consult-notes the
+;; backend.
+;;
+;; For more info on consult-notes see:
+;; URL `https://github.com/mclear-tools/consult-notes'
 
 ;;; Code:
 
@@ -18,7 +24,7 @@
 (require 'consult-notes nil t)
 
 (defun consult-omni--consult-notes-org-roam-note-preview (cand)
-  "Preview function for org-roam files."
+  "Preview function for CAND from org-roam files."
   (if cand
       (let* ((title (get-text-property 0 :title cand))
              (node (org-roam-node-from-title-or-alias title)))
@@ -26,7 +32,7 @@
             (consult--file-action (org-roam-node-file node))))))
 
 (defun consult-omni--consult-notes-org-headings-preview (cand)
-  "Preview function for org headings."
+  "Preview function for CAND from org headings."
   (if cand
       (let* ((title (get-text-property 0 :title cand))
              (marker (get-text-property 0 'consult--candidate title)))
@@ -34,7 +40,7 @@
             (consult--jump marker)))))
 
 (defun consult-omni--consult-notes-denote-preview (cand)
-  "Preview function for denote file."
+  "Preview function for CAND from denote file."
   (if (and cand
            (not (consult-notes-denote--excluded-p cand)))
       (let* ((title (get-text-property 0 :title cand))
@@ -42,14 +48,14 @@
         (if file
             (consult--file-action file)))))
 
-(defun consult-omni--consult-notes-org-roam-note-callback (cand &rest args)
-  "Callback function for org-roam files."
+(defun consult-omni--consult-notes-org-roam-note-callback (cand &rest _args)
+  "Callback function for CAND from org-roam files."
   (let* ((title (get-text-property 0 :title cand))
          (node (org-roam-node-from-title-or-alias title)))
     (org-roam-node-open node)))
 
-(defun consult-omni--consult-notes-org-headings-callback (cand &rest args)
-  "Callback function for org headings."
+(defun consult-omni--consult-notes-org-headings-callback (cand &rest _args)
+  "Callback function for CAND from org headings."
   (if cand
       (let* ((title (get-text-property 0 :title cand))
              (marker (get-text-property 0 'consult--candidate title)))
@@ -61,8 +67,8 @@
                          (funcall consult--buffer-display buff)
                          (recenter nil t))))))))
 
-(defun consult-omni--consult-notes-denote-callback (cand &rest args)
-  "Callback function for denote files."
+(defun consult-omni--consult-notes-denote-callback (cand &rest _args)
+  "Callback function for CAND from denote files."
   (if (and cand
            (not (consult-notes-denote--excluded-p cand)))
       (let* ((title (get-text-property 0 :title cand))
@@ -71,18 +77,18 @@
             (consult--file-action file)))))
 
 (defun consult-omni--consult-notes-org-headings-new (cand)
-  "Callback function for org headings."
-    (org-capture-string cand))
+  "Callback function for making “new” org headings from CAND."
+  (org-capture-string cand))
 
 (defun consult-omni--consult-notes-org-roam-note-new (cand)
-  "Callback function for org-roam files."
-    (org-roam-node-find nil cand))
+  "Callback function for making “new” org-roam files from CAND."
+  (org-roam-node-find nil cand))
 
 (defun consult-omni--consult-notes-denote-new (cand)
-  (consult-notes-denote--new-note cand)
-  )
+  "Callback function for making “new” denote files from CAND."
+  (consult-notes-denote--new-note cand))
 
-;; make consult-omni sources from consult-notes sources
+;; make consult-omni sources from consult-notes `consult-notes-org-headings--source'.
 (when consult-notes-org-headings-mode
   (consult-omni--make-source-from-consult-source (plist-put consult-notes-org-headings--source :name "Consult Notes Org")
                                                  :category 'file
@@ -102,27 +108,29 @@
                                                  :enabled (lambda () (bound-and-true-p consult-notes-org-headings-mode))
                                                  :interactive consult-omni-intereactive-commands-type))
 
+;; make consult-omni sources from consult-notes `consult-notes-org-headings--source'.
 (when consult-notes-org-roam-mode
   (cl-loop for source in '(consult-notes-org-roam--refs consult-notes-org-roam--nodes)
            do (let ((name (plist-get (eval source) :name)))
                 (plist-put (eval source) :name (concat "Consult Notes " name))
                 (consult-omni--make-source-from-consult-source source
-                                                             :category 'file
-                                                             :type 'sync
-                                                             :require-match nil
-                                                             :face 'consult-omni-notes-title-face
-                                                             :search-hist 'consult-omni--search-history
-                                                             :select-hist 'consult-omni--selection-history
-                                                             :on-preview #'consult-omni--consult-notes-org-roam-note-preview
-                                                             :on-return #'identity
-                                                             :on-callback #'consult-omni--consult-notes-org-roam-note-callback
-                                                             :on-new #'consult-omni--consult-notes-org-roam-note-new
-                                                             :preview-key 'consult-omni-preview-key
-                                                             :interactive consult-omni-intereactive-commands-type
-                                                             :group #'consult-omni--group-function
-                                                             :enabled (lambda () consult-notes-org-roam-mode)
-                                                             :annotate nil))))
+                                                               :category 'file
+                                                               :type 'sync
+                                                               :require-match nil
+                                                               :face 'consult-omni-notes-title-face
+                                                               :search-hist 'consult-omni--search-history
+                                                               :select-hist 'consult-omni--selection-history
+                                                               :on-preview #'consult-omni--consult-notes-org-roam-note-preview
+                                                               :on-return #'identity
+                                                               :on-callback #'consult-omni--consult-notes-org-roam-note-callback
+                                                               :on-new #'consult-omni--consult-notes-org-roam-note-new
+                                                               :preview-key 'consult-omni-preview-key
+                                                               :interactive consult-omni-intereactive-commands-type
+                                                               :group #'consult-omni--group-function
+                                                               :enabled (lambda () consult-notes-org-roam-mode)
+                                                               :annotate nil))))
 
+;; make consult-omni sources from consult-notes `consult-notes-org-headings--source'.
 (when consult-notes-denote-mode
   (consult-omni--make-source-from-consult-source (plist-put consult-notes-denote--source :name "Consult Notes Denote")
                                                  :category 'file

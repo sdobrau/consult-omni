@@ -11,24 +11,27 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-browser-history provides commands for searching browser
+;; history in Emacs using consult-omni.  It uses the browser-hist.el
+;; package as the backend.
+;; See URL https://github.com/agzam/browser-hist.el
+
 
 ;;; Code:
 
 (require 'consult-omni)
 (require 'browser-hist)
 
-(cl-defun consult-omni--browser-history-format-candidate (&rest args &key source query url search-url title face &allow-other-keys)
-  "Formats candidates of `consult-omni-browser-history'.
+(cl-defun consult-omni--browser-history-format-candidate (&rest args &key source query url title face &allow-other-keys)
+  "Format candidates of `consult-omni-browser-history' with ARGS.
 
 Description of Arguments:
 
-  SOURCE     the name string of the source for candidate
-  QUERY      the query string used for searching
-  URL        a string pointing to url of the candidate
-  SEARCH-URL a string pointing to the url for
-             the search results of QUERY on the SOURCE website
-  TITLE      the title of the candidate
-  SNIPPET    a string containing a snippet/description of candidate"
+  SOURCE     a string; the name string of the source for candidate
+  QUERY      a string; the query string used for searching
+  URL        a string; the URL of the candidate
+  TITLE      a string; the title of the candidate
+  FACE       a symbol; the face to use for title"
   (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (source (and (stringp source) (propertize source 'face 'consult-omni-source-type-face)))
          (match-str (and (stringp query) (not (equal query ".*")) (consult--split-escaped query)))
@@ -50,29 +53,37 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (cl-defun consult-omni--browser-history-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetch search results for INPUT from browser history."
- (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
+  "Fetch search results for INPUT from browser history with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
+  (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (browser (or (plist-get opts :browser) browser-hist-default-browser))
                (browser-hist-default-browser browser)
                (results (browser-hist--send-query query))
                (source "Browser History"))
-      (mapcar (lambda (item)
-                (let* ((url (car-safe item))
-                      (title (cdr-safe item))
-                      (decorated (consult-omni--browser-history-format-candidate :source source :query query :url url :title title)))
-                  (propertize decorated
-                              :source source
-                              :title title
-                              :url url
-                              :query query)))
-              results)))
+    (mapcar (lambda (item)
+              (let* ((url (car-safe item))
+                     (title (cdr-safe item))
+                     (decorated (consult-omni--browser-history-format-candidate :source source :query query :url url :title title)))
+                (propertize decorated
+                            :source source
+                            :title title
+                            :url url
+                            :query query)))
+            results)))
 
 ;; Define the Browse History Source
 (consult-omni-define-source "Browser History"

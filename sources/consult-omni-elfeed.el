@@ -11,28 +11,37 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-elfeed enables searching Elfeed's feeds in consult-omni.
+;; It provides commands to search feeds and getting the results
+;; directly in the minibuffer.
+;;
+;; For more info on Elfeed see:
+;; URL `https://github.com/skeeto/elfeed'
 
 ;;; Code:
 
 (require 'elfeed)
 (require 'consult-omni)
 
-;;; Customization Variables
+;;; User Options (a.k.a. Custom Variables)
+
 (defcustom consult-omni-elfeed-search-buffer-name "*consult-omni-elfeed-search*"
-  "Name for consult-omni-elfeed-search buffer."
+  "Name for `consult-omni-elfeed-search' buffer."
+  :group 'consult-omni
   :type 'string)
 
 (defcustom consult-omni-elfeed-default-filter nil
-  "Default Filter for consult-omni-elfeed-search."
+  "Default Filter for `consult-omni-elfeed-search'."
+  :group 'consult-omni
   :type 'string)
 
 (defun consult-omni--elfeed-format-candidate (entries query)
-  "Formats the candidates of `consult-omni-elfeed'.
+  "Format the ENTRIES for QUERY from `consult-omni-elfeed'.
 
 Description of Arguments:
 
-  ENTRIES entries from `consult-omni--elfeed-fetch-result'.
-  QUERY   the query input from the user"
+  ENTRIES a list; list of entries from `consult-omni--elfeed-fetch-result'.
+  QUERY   a string; the query input from the user"
   (let ((annotated-entries))
     (dolist (entry entries annotated-entries)
       (let* ((url (elfeed-entry-link entry))
@@ -69,7 +78,7 @@ Description of Arguments:
         (if consult-omni-highlight-matches-in-minibuffer
             (cond
              ((listp match-str)
-              (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+              (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
              ((stringp match-str)
               (setq str (consult-omni--highlight-match match-str str t)))))
         (push (propertize str
@@ -90,7 +99,7 @@ Description of Arguments:
   (get-buffer-create (or consult-omni-elfeed-search-buffer-name "*consult-omni-elfeed-search*")))
 
 (defun consult-omni--elfeed-preview (cand)
-  "Preview function for `consult-omni-elfeed'.
+  "Preview function for CAND from `consult-omni-elfeed'.
 
 Uses `elfeed-show-entry'."
   (if (listp cand) (setq cand (or (car-safe cand) cand)))
@@ -104,10 +113,19 @@ Uses `elfeed-show-entry'."
              buff)))
 
 (cl-defun consult-omni--elfeed-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Return entries matching INPUT in elfeed database.
+  "Return entries matching INPUT in elfeed database with ARGS.
 
-uses INPUT as filter ro find entries in elfeed databse.
-if FILTER is non-nil, it is used as additional filter parameters."
+Use INPUT as filter to find entries in elfeed database.  If
+`consult-omni-elfeed-default-filter' is non-nil, it is used as additional
+filter parameters.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (cl-letf* (((symbol-function #'elfeed-search-buffer) #'consult-omni--elfeed-search-buffer))
     (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                  (opts (car-safe opts))
@@ -134,7 +152,7 @@ if FILTER is non-nil, it is used as additional filter parameters."
       (when-let ((entries (cdr head)))
         (consult-omni--elfeed-format-candidate entries query)))))
 
-;; Define the Elfeed Source
+;; Define the elfeed source
 (consult-omni-define-source "elfeed"
                             :narrow-char ?e
                             :type 'sync

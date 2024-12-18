@@ -11,35 +11,44 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-apps provides commands for searching desktop applications using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 (require 'xdg)
 
+;;; User Options (a.k.a. Custom Variables)
+
 (defcustom consult-omni-apps-paths (list)
   "List of directories that contain applications."
+  :group 'consult-omni
   :type '(repeat :tag "List of paths" directory))
 
 (defcustom consult-omni-apps-use-cache nil
   "Whether to use cache for getting list of apps?"
+  :group 'consult-omni
   :type 'boolean)
 
 (defcustom consult-omni-apps-open-command-args nil
-  "Command line args to open an application"
+  "Command line args to open an application."
+  :group 'consult-omni
   :type 'string)
 
 (defcustom consult-omni-apps-regexp-pattern ""
-  "Regexp pattern to find system applications"
+  "Regexp pattern to find system applications."
+  :group 'consult-omni
   :type 'regexp)
 
 (defcustom consult-omni-apps-default-launch-function #'consult-omni--apps-launch-app
-  "Default function to launch an app"
+  "Default function to launch an app."
+  :group 'consult-omni
   :type '(choice (function :tag "(Default) Use System Shell" consult-omni--apps-launch-app)
                  (function :tag "Custom Function")))
 
 (defcustom consult-omni-open-with-prompt ">|  "
   "String for prompt in `consult-omni-open-with-app'."
+  :group 'consult-omni
   :type 'string)
 
 ;; Set the variables per system type (Linux and MacOS only)
@@ -64,19 +73,19 @@
                                                          (and (stringp path) path)))
                                                      (append consult-omni-apps-xdg-data-dirs
                                                              (list consult-omni-apps-xdg-data-home
-                                                           "/usr/share"
-                                                           "/usr/local/share")))))
+                                                                   "/usr/share"
+                                                                   "/usr/local/share")))))
    (setq consult-omni-apps-regexp-pattern ".*\\.desktop$")
    (setq consult-omni-apps-open-command-args "gtk-launch")))
 
 (defvar consult-omni-apps-cached-apps nil
-"Cached list of Paths to Desktop Entry Files")
+  "Cached list of Paths to desktop entry files.")
 
 (defvar consult-omni-apps-cached-items nil
-"Cached list of desktop apps for `consult-omni-apps'.")
+  "Cached list of desktop apps for `consult-omni-apps'.")
 
 (defun consult-omni--apps-cmd-args (app &optional file)
-  "Returns a commandline string for opening the APP
+  "Return a command line string for opening the APP.
 
 Uses `consult-omni-apps-open-command-args' as the main command line program
 If FILE is non-nil, returns a command line for opeing the FILE with APP."
@@ -86,7 +95,7 @@ If FILE is non-nil, returns a command line for opeing the FILE with APP."
           (list "&")))
 
 (defun consult-omni--apps-launch-app (app &optional file)
-  "Makes an async process for opening APP.
+  "Make an async process for opening APP.
 
 Uses `consult-omni--apps-cmd-args' to get the command line args string.
 If FILE is non-nil, the process will open the FILE in APP."
@@ -96,7 +105,7 @@ If FILE is non-nil, the process will open the FILE in APP."
     nil))
 
 (defun consult-omni-open-with-app (&optional file app)
-  "Opens FILE in (external) APP interactively.
+  "Open FILE in “external” APP interactively.
 
 If FILE is nil, user is queried to select a file.
 If APP is nil, `consult-omni-apps-static' is called to select one."
@@ -109,26 +118,27 @@ If APP is nil, `consult-omni-apps-static' is called to select one."
                (format "%s" (and (file-exists-p file) file)))))
 
 (defun consult-omni--apps-preview (cand)
-  "Preview function for `consult-omni-apps'."
-(ignore))
+  "Ignore preview if called on CAND in `consult-omni-apps'."
+  (ignore))
 
 (defun consult-omni--apps-callback (cand)
-  "Callback function for `consult-omni-apps'."
+  "Callback function to call on CAND for `consult-omni-apps'."
   (let ((app (get-text-property 0 :app cand)))
     (funcall consult-omni-apps-default-launch-function app)))
 
 (cl-defun consult-omni--apps-format-candidates (&rest args &key source query title path snippet visible face &allow-other-keys)
-"Formats the candidates of `consult-omni-apps'.
+  "Formats the candidates of `consult-omni-apps' withn ARGS.
 
 Description of Arguments:
 
-  SOURCE  the name to use (e.g. “Apps”)
-  QUERY   the query input from the user
-  TITLE   the title of the App (name of an application)
-  PATH    the filepath to the application
-  SNIPPET the description of the app (from Desktop Entry)
-  VISIBLE whether the applicaiton is visible (from Desktop Entry)
-  FACE    the face to apply to TITLE"
+  SOURCE  a string; the name to use (e.g. “Apps”)
+  QUERY   a string; the query input from the user
+  TITLE   a string; the title of the App (name of an application)
+  PATH    a string; the filepath to the application
+  SNIPPET a string; the description of the app (from Desktop Entry)
+  VISIBLE a boolean; whether the applicaiton is visible
+          (this can be derived from DesktopEntry)
+  FACE    a symbol; the face to use for TITLE"
   (let* ((frame-width-percent (max 10 (floor (* (frame-width) 0.1))))
          (source (and (stringp source) (propertize source 'face 'consult-omni-source-type-face)))
          (directory (and path (file-name-directory path)))
@@ -144,10 +154,10 @@ Description of Arguments:
                       (when snippet (concat "\t" snippet))
                       (when directory (concat "\t" directory))
                       (when source (concat "\t" source)))))
-     (if consult-omni-highlight-matches-in-minibuffer
+    (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
@@ -158,29 +168,30 @@ Description of Arguments:
 Finds all the desktop applications by finding files that
 match `consult-omni-apps-regexp-pattern' in `consult-omni-apps-paths'."
   (save-match-data
-  (if (and consult-omni-apps-use-cache consult-omni-apps-cached-apps)
-      consult-omni-apps-cached-apps
-    (let ((paths (if (stringp consult-omni-apps-paths)
-                     (list consult-omni-apps-paths)
-                   consult-omni-apps-paths)))
-      (when (listp paths)
-        (setq consult-omni-apps-cached-apps
-              (cl-remove-duplicates
-               (apply #'append (mapcar
-                                (lambda (path)
-                                  (when (file-exists-p path)
-                                    (directory-files path t consult-omni-apps-regexp-pattern t)))
-                                paths)))))))))
+    (if (and consult-omni-apps-use-cache consult-omni-apps-cached-apps)
+        consult-omni-apps-cached-apps
+      (let ((paths (if (stringp consult-omni-apps-paths)
+                       (list consult-omni-apps-paths)
+                     consult-omni-apps-paths)))
+        (when (listp paths)
+          (setq consult-omni-apps-cached-apps
+                (cl-remove-duplicates
+                 (apply #'append (mapcar
+                                  (lambda (path)
+                                    (when (file-exists-p path)
+                                      (directory-files path t consult-omni-apps-regexp-pattern t)))
+                                  paths)))))))))
 
 ;; set the `consult-omni-apps-cached-apps'
 (setq consult-omni-apps-cached-apps (consult-omni--apps-get-desktop-apps))
 
 (defun consult-omni--apps-update-cached-apps ()
-(let ((consult-omni-apps-use-cache nil))
-  (consult-omni--apps-get-desktop-apps)))
+  "Updated cached list of desktop applications."
+  (let ((consult-omni-apps-use-cache nil))
+    (consult-omni--apps-get-desktop-apps)))
 
 (defun consult-omni--apps-parse-app-file (file)
-  "Parses a desktop entry FILE.
+  "Parse a desktop entry FILE.
 
 Returns
  - name: the name of the application
@@ -190,86 +201,86 @@ Returns
 Adopted from `counsel-linux-app--parse-file' in counsel:
 URL https://github.com/abo-abo/swiper/blob/master/counsel.el"
   (save-match-data
-  (pcase system-type
-    ('darwin
-     (let ((name (file-name-base file))
-           (comment nil)
-           (exec (consult-omni--apps-cmd-args (file-name-nondirectory file))))
-       (list name comment exec t)))
-    ('gnu/linux
-     (with-temp-buffer
-       (insert-file-contents file)
-       (goto-char (point-min))
-       (let ((start (re-search-forward "^\\[Desktop Entry\\] *$" nil t))
-             (end (re-search-forward "^\\[" nil t))
-             (visible t)
-             name comment exec)
-         (catch 'break
-           (unless start
-             (throw 'break nil))
-           (goto-char start)
-           (when (re-search-forward "^\\(Hidden\\|NoDisplay\\) *= *\\(1\\|true\\) *$" end t)
-             (setq visible nil))
-           (setq name (match-string 1))
-           (goto-char start)
-           (unless (re-search-forward "^Type *= *Application *$" end t)
-             (throw 'break nil))
-           (setq name (match-string 1))
-           (goto-char start)
-           (unless (re-search-forward "^Name *= *\\(.+\\)$" end t)
-             (throw 'break nil))
-           (setq name (match-string 1))
-           (goto-char start)
-           (when (re-search-forward "^Comment *= *\\(.+\\)$" end t)
-             (setq comment (match-string 1)))
-           (goto-char start)
-           (unless (re-search-forward "^Exec *= *\\(.+\\)$" end t)
-             ;; Don't warn because this can technically be a valid desktop file.
-             (throw 'break nil))
-           (setq exec (match-string 1))
-           (goto-char start)
-           (when (re-search-forward "^TryExec *= *\\(.+\\)$" end t)
-             (let ((try-exec (match-string 1)))
-               (unless (locate-file try-exec exec-path nil #'file-executable-p)
-                 (throw 'break nil))))
-           (list name comment exec visible))))))))
+    (pcase system-type
+      ('darwin
+       (let ((name (file-name-base file))
+             (comment nil)
+             (exec (consult-omni--apps-cmd-args (file-name-nondirectory file))))
+         (list name comment exec t)))
+      ('gnu/linux
+       (with-temp-buffer
+         (insert-file-contents file)
+         (goto-char (point-min))
+         (let ((start (re-search-forward "^\\[Desktop Entry\\] *$" nil t))
+               (end (re-search-forward "^\\[" nil t))
+               (visible t)
+               name comment exec)
+           (catch 'break
+             (unless start
+               (throw 'break nil))
+             (goto-char start)
+             (when (re-search-forward "^\\(Hidden\\|NoDisplay\\) *= *\\(1\\|true\\) *$" end t)
+               (setq visible nil))
+             (setq name (match-string 1))
+             (goto-char start)
+             (unless (re-search-forward "^Type *= *Application *$" end t)
+               (throw 'break nil))
+             (setq name (match-string 1))
+             (goto-char start)
+             (unless (re-search-forward "^Name *= *\\(.+\\)$" end t)
+               (throw 'break nil))
+             (setq name (match-string 1))
+             (goto-char start)
+             (when (re-search-forward "^Comment *= *\\(.+\\)$" end t)
+               (setq comment (match-string 1)))
+             (goto-char start)
+             (unless (re-search-forward "^Exec *= *\\(.+\\)$" end t)
+               ;; Don't warn because this can technically be a valid desktop file.
+               (throw 'break nil))
+             (setq exec (match-string 1))
+             (goto-char start)
+             (when (re-search-forward "^TryExec *= *\\(.+\\)$" end t)
+               (let ((try-exec (match-string 1)))
+                 (unless (locate-file try-exec exec-path nil #'file-executable-p)
+                   (throw 'break nil))))
+             (list name comment exec visible))))))))
 
 (defun consult-omni-apps--cached-items (files query)
-  "Makes a cahced list of Desktop Applications from FILES.
+  "Make a cahced list of Desktop Applications from FILES.
 
 If `consult-omni-apps-cached-items' already exists, returns it otherwise
 makes a new one.
 
 FILES is a list of file paths to parse.
-For each file in files, if it contains the QUERY
-(a.k.a. matches the regexp pattern “.*QUERY.*”), it is parsed by
+For each file in files, if it contains the QUERY (a.k.a. matches the
+regexp pattern “.*QUERY.*”), it is parsed by
 `consult-omni--apps-parse-app-file' and added to the
 `consult-omni-apps-cached-items'"
   (save-match-data
-(if (and consult-omni-apps-use-cache consult-omni-apps--cached-items)
-    consult-omni-apps-cached-items
-(setq consult-omni-apps-cached-items
- (mapcar (lambda (file)
-             (pcase-let* ((source "Apps")
-                          (`(,name ,comment ,exec ,visible) (consult-omni--apps-parse-app-file file))
-                    (title (or name (file-name-base file) ""))
-                    (app (and (stringp file) (file-exists-p file) (file-name-nondirectory file)))
-                    (search-url nil)
-                    (consult-omni-highlight-matches-in-minibuffer nil)
-                    (decorated (funcall #'consult-omni--apps-format-candidates :source source :query query :title title :path file :snippet comment :visible visible)))
-               (propertize decorated
-                           :source source
-                           :title title
-                           :url nil
-                           :search-url nil
-                           :query query
-                           :snippet comment
-                           :path file
-                           :exec exec
-                           :app app)))
-           (if query
-               (cl-remove-if-not (lambda (file) (string-match (concat ".*" query ".*") file nil t)) files)
-             files))))))
+    (if (and consult-omni-apps-use-cache consult-omni-apps--cached-items)
+        consult-omni-apps-cached-items
+      (setq consult-omni-apps-cached-items
+            (mapcar (lambda (file)
+                      (pcase-let* ((source "Apps")
+                                   (`(,name ,comment ,exec ,visible) (consult-omni--apps-parse-app-file file))
+                                   (title (or name (file-name-base file) ""))
+                                   (app (and (stringp file) (file-exists-p file) (file-name-nondirectory file)))
+                                   (search-url nil)
+                                   (consult-omni-highlight-matches-in-minibuffer nil)
+                                   (decorated (funcall #'consult-omni--apps-format-candidates :source source :query query :title title :path file :snippet comment :visible visible)))
+                        (propertize decorated
+                                    :source source
+                                    :title title
+                                    :url nil
+                                    :search-url nil
+                                    :query query
+                                    :snippet comment
+                                    :path file
+                                    :exec exec
+                                    :app app)))
+                    (if query
+                        (cl-remove-if-not (lambda (file) (string-match (concat ".*" query ".*") file nil t)) files)
+                      files))))))
 
 (setq consult-omni-apps--cached-items  (consult-omni-apps--cached-items consult-omni-apps-cached-apps ".*"))
 
@@ -278,42 +289,45 @@ For each file in files, if it contains the QUERY
   (consult-omni-apps--cached-items consult-omni-apps-cached-apps ".*")))
 
 (cl-defun consult-omni--apps-list-apps (input &rest args &key callback &allow-other-keys)
-  "Get a list of applications from OS.
+  "Get a list of applications from the operating system with ARGS.
 
 Finds apps in `consult-omni--apps-get-desktop-apps' that contain
-the query in INPUT string (matches regexp pattern “.*query.*”).
+the query in INPUT string \(i.e. matches regexp pattern “.*INPUT.*”\).
 If `consult-omni-apps-use-cache' is non-nil,
-then `consult-omni-apps-cached-items' is used list of all apps otherwise
-a new list is generated."
- (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
+then `consult-omni-apps-cached-items' is used, otherwise
+a new list is generated.
+
+CALLBACK is an internal function used by consult-omni collection mechanism
+to update list of candidates in the minibuffer."
+  (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
                (count (or (and count (integerp (read count)) (string-to-number count))
-                             consult-omni-default-count))
+                          consult-omni-default-count))
                (files (consult-omni--apps-get-desktop-apps)))
-   (if (and consult-omni-apps-use-cache query)
-       (seq-filter (lambda (file) (string-match (concat ".*" query ".*") file nil t)) consult-omni-apps-cached-items)
-   (mapcar (lambda (file)
-             (pcase-let* ((source "Apps")
-                          (`(,name ,comment ,exec ,visible) (consult-omni--apps-parse-app-file file))
-                    (title (or name (file-name-base file) ""))
-                    (app (and (stringp file) (file-exists-p file) (file-name-nondirectory file)))
-                    (search-url nil)
-                    (consult-omni-highlight-matches-in-minibuffer nil)
-                    (decorated (funcall #'consult-omni--apps-format-candidates :source source :query query :title title :path file :snippet comment :visible visible)))
-               (propertize decorated
-                           :source source
-                           :title title
-                           :url nil
-                           :search-url nil
-                           :query query
-                           :snippet comment
-                           :path file
-                           :exec exec
-                           :app app)))
-           (if query
-             (cl-remove-if-not (lambda (file) (string-match (concat ".*" query ".*") file nil t)) files)
-             files)))))
+    (if (and consult-omni-apps-use-cache query)
+        (seq-filter (lambda (file) (string-match (concat ".*" query ".*") file nil t)) consult-omni-apps-cached-items)
+      (mapcar (lambda (file)
+                (pcase-let* ((source "Apps")
+                             (`(,name ,comment ,exec ,visible) (consult-omni--apps-parse-app-file file))
+                             (title (or name (file-name-base file) ""))
+                             (app (and (stringp file) (file-exists-p file) (file-name-nondirectory file)))
+                             (search-url nil)
+                             (consult-omni-highlight-matches-in-minibuffer nil)
+                             (decorated (funcall #'consult-omni--apps-format-candidates :source source :query query :title title :path file :snippet comment :visible visible)))
+                  (propertize decorated
+                              :source source
+                              :title title
+                              :url nil
+                              :search-url nil
+                              :query query
+                              :snippet comment
+                              :path file
+                              :exec exec
+                              :app app)))
+              (if query
+                  (cl-remove-if-not (lambda (file) (string-match (concat ".*" query ".*") file nil t)) files)
+                files)))))
 
 (consult-omni-define-source "Apps"
                             :narrow-char ?A

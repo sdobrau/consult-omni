@@ -11,6 +11,11 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-gh enables using consult-gh in consult-omni.
+;; It provides commands to search GitHub repositories using consult-gh as ;; the backend.
+;;
+;; For more info on consult-gh see:
+;; URL `https://github.com/armindarvish/consult-gh'
 
 ;;; Code:
 
@@ -18,13 +23,13 @@
 (require 'consult-gh)
 
 (defun consult-omni--gh-transform (items &optional query)
-  "Transforms consult-gh candidates to consult-omni style."
+  "Transform consult-gh ITEMS for QUERY to consult-omni style."
   (remove nil (mapcar (lambda (string)
                         (consult-gh--repo-format string (or query "") t))
                       items)))
 
 (defun consult-omni--gh-preview (cand)
-  "Preview for `consult-omni-github'."
+  "Preview function for CAND from `consult-omni-github'."
   (when-let ((info (text-properties-at 0 (cdr (get-text-property 0 'multi-category cand))))
              (repo (plist-get info :repo))
              (query (plist-get info :query))
@@ -36,20 +41,28 @@
       (if consult-gh-highlight-matches
           (cond
            ((listp match-str)
-            (mapcar (lambda (item)
-                      (highlight-regexp item 'consult-gh-preview-match-face))
-                    match-str))
+            (mapc (lambda (item)
+                    (highlight-regexp item 'consult-gh-preview-match-face))
+                  match-str))
            ((stringp match-str)
             (highlight-regexp match-str 'consult-gh-preview-match-face)))))
     (funcall (consult--buffer-preview) 'preview
              buffer)))
 
 (defun consult-omni--gh-callback (cand)
-  "Callback for `consult-omni-github'."
+  "Callback function for CAND from `consult-omni-github'."
   (funcall consult-gh-repo-action (cdr (get-text-property 0 'multi-category cand))))
 
 (cl-defun consult-omni--gh-search-repos-builder (input &rest args &key callback &allow-other-keys)
-  "Makes builder command line args for “GitHub CLI”."
+  "Make builder command line args for “GitHub CLI” with INPUT and ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (if callback (seq-difference args (list :callback callback)) args)))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -64,7 +77,7 @@
                     cmd-opts)
             hl))))
 
-;; Define the GitHub Source
+;; Define the GitHub source
 (consult-omni-define-source "GitHub"
                             :narrow-char ?h
                             :type 'async
@@ -83,7 +96,7 @@
                             :interactive consult-omni-intereactive-commands-type
                             :transform #'consult-omni--gh-transform
                             :enabled (lambda () (and (executable-find "gh")
-                                                (fboundp 'consult-gh-search-repos)))
+                                                     (fboundp 'consult-gh-search-repos)))
                             :annotate nil)
 
 ;;; provide `consult-omni-gh' module

@@ -11,6 +11,13 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-numi provides commands for doing calculations directly in
+;; Emacs minibuffer using consult-omni as the frontend and numi-cli shell
+;; commands as the backend.
+;;
+;; For more info on nuumi and numi-cli see the following URLs:
+;; URL `https://numi.app'
+;; URL `https://github.com/nikolaeu/numi'
 
 ;;; Code:
 
@@ -21,29 +28,41 @@
 
 Similar to other command line args for consult but for numi-cli.
 See `consult-locate-args' for example."
+  :group 'consult-omni
   :type '(choice string (repeat (choice string sexp))))
 
 (defun consult-omni--numi-preview (cand)
-  "Preview function for `consult-omni-numi' command.")
+  "Preview function for CAND from `consult-omni-numi'."
+  (ignore))
 
 (defun consult-omni--numi-callback (cand)
-  "Callback function for `consult-omni-numi' command."
+  "Callback function for CAND from `consult-omni-numi'."
   (let ((result  (get-text-property 0 :title cand)))
     (kill-new result)))
 
 (defun consult-omni--numi-filter (candidates &optional query)
-  "Filters `consult-omni-numi' candidates."
+  "Filter CANDIDATES from `consult-omni-numi'.
+
+QUERY is the user input string."
   (cl-loop for candidate in candidates
            when (not (equal candidate "?"))
            collect candidate))
 
 (cl-defun consult-omni--numi-builder (input &rest args &key callback &allow-other-keys)
-  "Makes builder command line args for “numi-cli”."
+  "Make builder command line args for “numi-cli” with INPUT and ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts)))
     (funcall #'consult-omni--async-builder (shell-quote-argument query) consult-omni-numi-args)))
 
-;; Define the Numi Source
+;; Define the Numi source
 (consult-omni-define-source "Numi"
                             :narrow-char ?N
                             :category 'consult-omni-calc

@@ -11,65 +11,78 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-grep provides commands for running “grep” shell commands
+;; similar to consult-grep but using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
 (cl-defun consult-omni--grep-format (candidates &rest args &key source query regexp-pattern)
-  "Formats candidates for grep based commands.
+  "Format CANDIDATES for grep based commands with ARGS.
+
+Description of Arguments:
+  SOURCE         a string; the source name \(e.g. “grep”\)
+  QUERY          a string; query input from the user
+  REGEXP-PATTERN a string; regexp to match file and line of grep output
+                 \(for an example, see `consult--grep-match-regexp'\)
 
 Adopted from `consult--grep-format'."
-(let* ((frame-width-percent (floor (* (frame-width) 0.1)))
+  (let* ((frame-width-percent (floor (* (frame-width) 0.1)))
          (file "")
          (filename "")
          (file-len 0)
          (file-str "")
          (file-str-len 0)
          result)
-      (dolist (str candidates)
-        (when (and (string-match regexp-pattern str)
-                   ;; Filter out empty context lines
-                   (or (/= (aref str (match-beginning 3)) ?-)
-                       (/= (match-end 0) (length str))))
-          ;; We share the file name across candidates to reduce
-          ;; the amount of allocated memory.
-          (unless (and (= file-len (- (match-end 1) (match-beginning 1)))
-                       (eq t (compare-strings
-                              file 0 file-len
-                              str (match-beginning 1) (match-end 1) nil)))
-            (setq file (match-string 1 str)
-                  file-len (length file)))
-          (let* ((line (match-string 2 str))
-                 (ctx (= (aref str (match-beginning 3)) ?-))
-                 (sep (if ctx "-" ":"))
-                 (content (substring str (match-end 0)))
-                 (line-len (length line))
-                 (cand)
-                 (file-str (string-remove-prefix (file-truename default-directory) (file-truename file)))
-                 (file-str (if (> (length file-str) (* frame-width-percent 5))
-                               (consult-omni--set-string-width file-str (* frame-width-percent 5) (* frame-width-percent 1))
-                             file-str))
-                 (file-str-len (length file-str)))
-            (when (length> content consult-grep-max-columns)
-              (setq content  (consult-omni--set-string-width content consult-grep-max-columns)))
-             (setq cand (concat file-str sep line sep content))
-            ;; Store file name in order to avoid allocations in `consult--prefix-group'
-            (add-text-properties 0 1 `(:source ,source :title ,cand :query ,query :file ,file :pos ,line :content ,content) cand)
-            (add-text-properties 0 file-str-len `(face consult-file consult--prefix-group ,file) cand)
-            (put-text-property (1+ file-str-len) (+ 1 file-str-len line-len) 'face 'consult-line-number cand)
-            (when ctx
-              (add-face-text-property (+ 2 file-str-len line-len) (length cand) 'consult-grep-context 'append cand))
-(push cand result)
-            )))
+    (dolist (str candidates)
+      (when (and (string-match regexp-pattern str)
+                 ;; Filter out empty context lines
+                 (or (/= (aref str (match-beginning 3)) ?-)
+                     (/= (match-end 0) (length str))))
+        ;; We share the file name across candidates to reduce
+        ;; the amount of allocated memory.
+        (unless (and (= file-len (- (match-end 1) (match-beginning 1)))
+                     (eq t (compare-strings
+                            file 0 file-len
+                            str (match-beginning 1) (match-end 1) nil)))
+          (setq file (match-string 1 str)
+                file-len (length file)))
+        (let* ((line (match-string 2 str))
+               (ctx (= (aref str (match-beginning 3)) ?-))
+               (sep (if ctx "-" ":"))
+               (content (substring str (match-end 0)))
+               (line-len (length line))
+               (cand)
+               (file-str (string-remove-prefix (file-truename default-directory) (file-truename file)))
+               (file-str (if (> (length file-str) (* frame-width-percent 5))
+                             (consult-omni--set-string-width file-str (* frame-width-percent 5) (* frame-width-percent 1))
+                           file-str))
+               (file-str-len (length file-str)))
+          (when (length> content consult-grep-max-columns)
+            (setq content  (consult-omni--set-string-width content consult-grep-max-columns)))
+          (setq cand (concat file-str sep line sep content))
+          ;; Store file name in order to avoid allocations in `consult--prefix-group'
+          (add-text-properties 0 1 `(:source ,source :title ,cand :query ,query :file ,file :pos ,line :content ,content) cand)
+          (add-text-properties 0 file-str-len `(face consult-file consult--prefix-group ,file) cand)
+          (put-text-property (1+ file-str-len) (+ 1 file-str-len line-len) 'face 'consult-line-number cand)
+          (when ctx
+            (add-face-text-property (+ 2 file-str-len line-len) (length cand) 'consult-grep-context 'append cand))
+          (push cand result)
+          )))
     result))
 
 (defun consult-omni--grep-transform (candidates &optional query)
-  "Formats candidates for `consult-omni-grep'."
+  "Format CANDIDATES for `consult-omni-grep' from QUERY."
   (consult-omni--grep-format candidates :source "grep" :query query :regexp-pattern consult--grep-match-regexp))
 
 (defun consult-omni--grep-make-builder (make-builder &optional dir)
-  "General builder for grep and similar process."
+  "Build command line for grep and similar processes.
+
+Description of Arguments:
+  MAKE-BUILDER a function; takes one argument, PATHS, and builds grep
+               command line across PATHS.
+  DIR          a string; parent directory to use for getting PATHS"
   (pcase-let* ((`(_ ,paths ,dir) (consult--directory-prompt "" dir))
                (paths (if dir
                           (mapcar (lambda (path) (file-truename (concat dir path))) paths)
@@ -77,14 +90,14 @@ Adopted from `consult--grep-format'."
     (funcall make-builder paths)))
 
 (defun consult-omni--grep-preview (cand)
-  "Preview function for `consult-omni-grep'."
+  "Preview function for CAND from `consult-omni-grep'."
   (let ((file (get-text-property 0 :file cand))
         (pos (get-text-property 0 :pos cand))
         (content (get-text-property 0 :content cand))
         (query (get-text-property 0 :query cand)))
     (when file
       (with-current-buffer (funcall #'consult--file-action file)
-        (and (stringp pos) (goto-line (string-to-number pos)))
+        (when (stringp pos) (forward-line (- (string-to-number pos) (line-number-at-pos))))
         (consult--invisible-open-permanently)
         (recenter nil t)
         (when consult-omni-highlight-matches-in-file
@@ -94,7 +107,15 @@ Adopted from `consult--grep-format'."
       nil)))
 
 (cl-defun consult-omni--grep-builder (input &rest args &key callback &allow-other-keys)
-  "Makes builder command line args for “grep”."
+  "Make builder command line args for “grep” with INPUT and ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -105,7 +126,7 @@ Adopted from `consult--grep-format'."
                (default-directory (or dir default-directory)))
     (funcall (consult-omni--grep-make-builder #'consult--grep-make-builder dir) query)))
 
-;; Define the Grep Source
+;; Define the grep Source
 (consult-omni-define-source "grep"
                             :narrow-char ?r
                             :type 'async

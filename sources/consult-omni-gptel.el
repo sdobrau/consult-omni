@@ -11,19 +11,25 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-gptel enables searching LLMS in consult-omni using gptel.
+;; It provides commands to get gptel results directly in the minibuffer.
+;;
+;; For more info on gptel see:
+;; URL `https://github.com/karthink/gptel'
 
 ;;; Code:
 
 (require 'gptel)
 (require 'consult-omni)
 
-;;; Customization Variables
+;;; User Options (a.k.a. Custom Variables)
 
 (defcustom consult-omni-gptel-backend (or gptel-backend gptel--openai)
   "LLM backend to use in consult-omni-gptel.
 
 By default inherits from `gptel-backend'.
 See `gptel-backend' for more info."
+  :group 'consult-omni
   :type `(choice
           (const :tag "ChatGPT" ,gptel--openai)
           (restricted-sexp :match-alternatives (gptel-backend-p 'nil)
@@ -34,6 +40,7 @@ See `gptel-backend' for more info."
 
 By default inherits from `gptel-model'.
 See `gptel-model' for more info."
+  :group 'consult-omni
   :type '(choice
           (string :tag "Specify model name")
           (const :tag "GPT 3.5 turbo" "gpt-3.5-turbo")
@@ -43,25 +50,27 @@ See `gptel-model' for more info."
           (const :tag "GPT 4 32k" "gpt-4-32k")
           (const :tag "GPT 4 1106 (preview)" "gpt-4-1106-preview")))
 
-
 (defcustom consult-omni-gptel-buffer-name  "*consult-omni-gptel*"
   "Name for consult-omni-gptel buffer."
-  :type '(choice (:tag "A string for buffer name" string)
-                 (:tag "A custom function taking prompt (and other args) as input and returning buffer name string" function)))
+  :group 'consult-omni
+  :type '(choice (string :tag "A string for buffer name")
+                 (function :tag "A custom function taking prompt (and other args) as input and returning buffer name string")))
 
 (defcustom consult-omni-gptel-cand-title #'consult-omni--gptel-make-title-short-answer
-  "Name for consult-omni-gptel buffer."
-  :type '(choice (:tag "(Default) Get a quickshort answer" #'consult-omni--gptel-make-title-short-answer)
-                 (:tag "placeholder string with prompt" #'consult-omni--gptel-make-title-placeholder)
-                 (:tag "A custom function taking input (and other args) as input and returning a string" function)
-                 (:tag "A custom fixed string" string)))
+  "What to show as the title in in the minibuffer?"
+  :group 'consult-omni
+  :type '(choice (function :tag "(Default) Get a quick short answer (Sends the prompt to LLM) and shows a short response.)" #'consult-omni--gptel-make-title-short-answer)
+                 (function :tag "Placeholder string with prompt (Does not send prompt to LLM until the candidate is selected.)" #'consult-omni--gptel-make-title-placeholder)
+                 (function :tag "A custom function taking input (and other args) as input and returning a string")
+                 (string :tag "A custom fixed string")))
 
 (defcustom consult-omni-gptel-short-answer-wordcount 10
-  "Number of words to use in a short answer"
+  "Number of words to use in a short answer."
+  :group 'consult-omni
   :type 'integer)
 
 (cl-defun consult-omni--gptel-format-candidate (&rest args &key source query title model backend stream face &allow-other-keys)
-  "Returns a formatted string for gptel's candidates
+  "Return a formatted string for gptel's candidates with ARGS.
 
 Description of Arguments:
 
@@ -69,8 +78,8 @@ Description of Arguments:
   QUERY    query input from the user
            the search results of QUERY on the SOURCE website
   TITLE    the string of the candidate.
-  MODEL    the model to use for gptel. see `gptel-mode' for details.
-  BACKEND  the backend to use for gptel. see `gptel-backend' for details.
+  MODEL    the model to use for gptel.  See `gptel-mode' for details.
+  BACKEND  the backend to use for gptel.  See `gptel-backend' for details.
   STREAM   boolean to determine whether to use strem or not.
            see`gptel-stream' for details.
   FACE     the face to apply to TITLE"
@@ -90,13 +99,15 @@ Description of Arguments:
     (if consult-omni-highlight-matches-in-minibuffer
         (cond
          ((listp match-str)
-          (mapcar (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
+          (mapc (lambda (match) (setq str (consult-omni--highlight-match match str t))) match-str))
          ((stringp match-str)
           (setq str (consult-omni--highlight-match match-str str t)))))
     str))
 
 (defun consult-omni--gptel-buffer-name (&optional query &rest args)
-  "Returns a string for `consult-omni-gptel' buffer name"
+  "Return a string for `consult-omni-gptel' buffer name with QUERY and ARGS.
+
+QUERY is a string, the prompt to send to gptel."
   (cond
    ((functionp consult-omni-gptel-buffer-name)
     (funcall consult-omni-gptel-buffer-name query args))
@@ -105,10 +116,13 @@ Description of Arguments:
    (t "*consult-omni-gptel*")))
 
 (cl-defun consult-omni--gptel-response-preview (query &rest args &key backend model stream &allow-other-keys)
-  "Returns a `gptel' buffer.
+  "Return a `gptel' buffer for QUERY and ARGS.
 
-QUERY is sent to BACKEND using MODEL.
-If STREAM is non-nil, the response is streamed."
+Description of Arguments:
+  QUERY  a string; the prompt that is sent to gptel
+  BACKEND a symbol; the backend used for gptel (see `gptel-backend')
+  MODEL  a string; the model to use for gptel (see `gptel-model')
+  STREAM a boolean; when non-nil, the response is streamed"
   (save-excursion
     (with-current-buffer (gptel (consult-omni--gptel-buffer-name query args) nil nil nil)
       (let* ((query-sent)
@@ -133,7 +147,7 @@ If STREAM is non-nil, the response is streamed."
       (current-buffer))))
 
 (defun consult-omni--gptel-preview (cand)
-  "Shows a preview buffer of CAND for `consult-omni-gptel'.
+  "Show a preview buffer of CAND from `consult-omni-gptel'.
 
 The preview buffer is from `consult-omni--gptel-response-preview'."
   (if (listp cand) (setq cand (or (car-safe cand) cand)))
@@ -147,10 +161,18 @@ The preview buffer is from `consult-omni--gptel-response-preview'."
                  buff))))
 
 (cl-defun consult-omni--gptel-make-title-placeholder (input &rest args &key callback &allow-other-keys)
-  "Makes a placeholder for sending query to gptel.
+  "Make a placeholder for sending INPUT to gptel with ARGS.
 
 This makes a placeholder string “ask gptel: %s” %s=INPUT with
-metadata so it can be send to `gptel'."
+metadata so it can be send to `gptel'.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (if callback (seq-difference args (list :callback callback)) args)))
                (opts (car-safe opts))
                (source "gptel")
@@ -174,11 +196,19 @@ metadata so it can be send to `gptel'."
                             :stream stream
                             :backend backend)))
     (when (and annotated-results (functionp callback))
-        (funcall callback (list annotated-results)))
-      (list annotated-results)))
+      (funcall callback (list annotated-results)))
+    (list annotated-results)))
 
 (cl-defun consult-omni--gptel-make-title-short-answer (input &rest args &key callback &allow-other-keys)
-  "Gets a short preview answer from gptel."
+  "Get a short preview answer from gptel for INPUT with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (if callback (seq-difference args (list :callback callback)) args)))
                (opts (car-safe opts))
                (source "gptel")
@@ -217,9 +247,17 @@ metadata so it can be send to `gptel'."
     output))
 
 (cl-defun consult-omni--gptel-fetch-results (input &rest args &key callback &allow-other-keys)
-  "Fetches chat response for INPUT from gptel."
+  "Fetch chat response for INPUT from gptel with ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (unless (featurep 'gptel)
-    (error "consult-omni: gptel is not available. Make sure to install and load `gptel'."))
+    (error "Consult-omni: gptel is not available.  Make sure to install and load `gptel'"))
   (let ((results))
     (cond
      ((stringp consult-omni-gptel-cand-title) (setq results (list consult-omni-gptel-cand-title)))
@@ -227,7 +265,7 @@ metadata so it can be send to `gptel'."
       (setq results (apply consult-omni-gptel-cand-title input :callback callback args))))
     results))
 
-;; Define the Gptel Source
+;; Define the gptel source
 (consult-omni-define-source "gptel"
                             :narrow-char ?a
                             :type 'dynamic

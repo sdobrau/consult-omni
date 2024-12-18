@@ -11,18 +11,21 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-buffer provides commands for searching buffer names
+;; similar to consult-buffer but using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
 (defun consult-omni--consult-buffer-preview (cand)
-  "Preview function for `consult-omni--buffer'."
+  "Preview function for CAND from `consult-omni--buffer'."
   (if cand
       (let* ((title (get-text-property 0 :title cand)))
         (when-let ((buff (get-buffer title)))
           (consult--buffer-action buff)))))
 
+;; make a consult-omni source from `consult--source-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-buffer
                                                :type 'sync
                                                :on-preview #'consult-omni--consult-buffer-preview
@@ -36,6 +39,7 @@
                                                :group #'consult-omni--group-function
                                                :enabled (lambda () (bound-and-true-p consult--source-buffer)))
 
+;; make a consult-omni source from `consult--source-modified-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-modified-buffer
                                                :type 'sync
                                                :on-preview #'consult-omni--consult-buffer-preview
@@ -49,6 +53,7 @@
                                                :group #'consult-omni--group-function
                                                :enabled (lambda () (bound-and-true-p consult--source-modified-buffer)))
 
+;; make a consult-omni source from `consult--source-hidden-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-hidden-buffer
                                                :type 'sync
                                                :on-preview #'consult-omni--consult-buffer-preview
@@ -62,6 +67,7 @@
                                                :group #'consult-omni--group-function
                                                :enabled (lambda () (bound-and-true-p consult--source-hidden-buffer)))
 
+;; make a consult-omni source from `consult--source-project-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-project-buffer
                                                :type 'sync
                                                :on-preview #'consult-omni--consult-buffer-preview
@@ -75,6 +81,7 @@
                                                :group #'consult-omni--group-function
                                                :enabled :enabled (lambda () (bound-and-true-p consult--source-project-buffer)))
 
+;; make a consult-omni source from `consult--source-recent-file'
 (consult-omni--make-source-from-consult-source 'consult--source-recent-file
                                                :type 'sync
                                                :on-preview #'consult-omni--consult-buffer-preview
@@ -88,6 +95,7 @@
                                                :group #'consult-omni--group-function
                                                :enabled (lambda () (bound-and-true-p consult--source-recent-file)))
 
+;; make a consult-omni source from `consult--source-project-recent-file'
 (consult-omni--make-source-from-consult-source 'consult--source-project-recent-file
                                                :type 'sync
                                                :on-preview #'consult-omni--consult-buffer-preview
@@ -101,6 +109,7 @@
                                                :group #'consult-omni--group-function
                                                :enabled (lambda () (bound-and-true-p consult--source-project-recent-file)))
 
+;; make a consult-omni source from `consult--source-bookmark'
 (consult-omni--make-source-from-consult-source 'consult--source-bookmark
                                                :type 'sync
                                                :on-preview #'consult-omni--consult-buffer-preview

@@ -11,41 +11,55 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; consult-omni-find provides commands for running “find” shell commands
+;; similar to consult-find but using consult-omni.
 
 ;;; Code:
 
 (require 'consult-omni)
 
+;;; User Options (a.k.a. Custom Variables)
+
 (defcustom consult-omni-find-show-hidden-files t
   "Whether to show hidden files in `consult-omni-find'."
+  :group 'consult-omni
   :type 'boolean)
 
 (defcustom consult-omni-find-args  "find ."
   "Command line arguments for find.
 
 Similar to `consult-find-args' bur for consult-omni."
+  :group 'consult-omni
   :type '(choice string (repeat (choice string sexp))))
 
-(defun consult-omni--find-transform (candidates &optional query)
-  "Formats candidates of `consult-omni-find'."
+(defun consult-omni--find-transform (candidates &optional _query)
+  "Format CANDIDATES of `consult-omni-find'."
   (mapcar (lambda (candidate)
             (string-trim (string-remove-prefix (file-truename default-directory) candidate)))
           candidates))
 
-(defun consult-omni--find-filter (candidates &optional query)
-  "Filters for candidates of `consult-omni-find'."
+(defun consult-omni--find-filter (candidates &optional _query)
+  "Filters for CANDIDATES of `consult-omni-find'."
   (seq-filter (lambda (candidate) (not (string-match "^find:.*$" candidate nil nil))) candidates))
 
 (defun consult-omni--find-preview (cand)
-  "Preview function for `consult-omni-find'."
+  "Preview function for CAND from `consult-omni-find'."
   (funcall (consult--file-preview) 'preview cand))
 
 (defun consult-omni--find-callback (cand)
-  "Callback for `consult-omni-find'."
+  "Callback for CAND from `consult-omni-find'."
   (consult--file-action cand))
 
 (cl-defun consult-omni--find-builder (input &rest args &key callback &allow-other-keys)
-  "Makes builder command line args for “find”."
+  "Make builder command line args for “find” from INPUT from ARGS.
+
+CALLBACK is a function used internally to update the list of candidates in
+the minibuffer asynchronously.  It is called with a list of strings, which
+are new annotated candidates \(e.g. as they arrive from an asynchronous
+process\) to be added to the minibuffer completion cnadidates.  See the
+section on REQUEST in documentation for `consult-omni-define-source' as
+well as the function
+`consult-omni--multi-update-dynamic-candidates' for how CALLBACK is used."
   (pcase-let* ((`(,query . ,opts) (consult-omni--split-command input (seq-difference args (list :callback callback))))
                (opts (car-safe opts))
                (count (plist-get opts :count))
@@ -66,7 +80,7 @@ Similar to `consult-find-args' bur for consult-omni."
                                           (if ignore (concat " -not -iwholename *" ignore "*")))))
     (funcall (consult--find-make-builder paths) query)))
 
-;; Define the Find Source
+;; Define the find Source
 (consult-omni-define-source "find"
                             :narrow-char ?f
                             :category 'file

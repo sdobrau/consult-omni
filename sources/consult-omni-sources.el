@@ -11,6 +11,7 @@
 ;; Keywords: convenience
 
 ;;; Commentary:
+;; This file provides the default sources for consult-omni.
 
 ;;; Code:
 
@@ -62,16 +63,18 @@
         'consult-omni-youtube))
 
 (defun consult-omni-sources--load-module (symbol)
-  "Loads feature SYMBOL."
+  "Load feature SYMBOL."
   (require symbol nil t))
 
 (defun consult-omni-sources-load-modules (&optional list)
-  "Loads the LIST of symbols.
+  "Load the LIST of symbols.
 
-If list is nil, loads `consult-omni-sources-modules-to-load'and if that is nil as well, loads `consult-omni-sources--all-modules-list'."
-  (mapcar #'consult-omni-sources--load-module (or list consult-omni-sources-modules-to-load consult-omni-sources--all-modules-list)))
+If LIST is nil, loads `consult-omni-sources-modules-to-load', and if that
+is nil as well, loads `consult-omni-sources--all-modules-list'."
+  (mapc #'consult-omni-sources--load-module (or list consult-omni-sources-modules-to-load consult-omni-sources--all-modules-list)))
 
 ;;; provide `consult-omni-sources' module
 
 (provide 'consult-omni-sources)
+
 ;;; consult-omni-sources.el ends here
