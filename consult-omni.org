@@ -59,7 +59,7 @@
 #+begin_src emacs-lisp
 ;;; Group
 (defgroup consult-omni nil
-  "Consulting omni sources"
+  "Consulting omni sources."
   :group 'convenience
   :group 'minibuffer
   :group 'consult
@@ -2259,8 +2259,12 @@ Adds PREFIX and SUFFIX to the name if non-nil."
 (defun consult-omni--func-generate-docstring (source-name &optional dynamic)
   "Make a generic documentaion string for an interactive command.
 
-DYNAMIC is a boolean that describes whether the funciton is a dynamic one
-or not.
+DEscription of Arguments:
+
+  SOURCE-NAME a string; name of the source \(e.g. “Google”\)
+  DYNAMIC     a boolean; whether the funciton is dynamic or not.
+              dynamic here means dynamic completion in minibuffer like
+              consult-grep behavior.
 
 This is used to make docstring for function made by
 `consult-omni-define-source'."
@@ -3845,6 +3849,7 @@ regexp pattern “.*QUERY.*”), it is parsed by
 ****** update cahced items
 #+begin_src emacs-lisp
 (defun consult-omni--apps-update-cached-items ()
+"Update list of cached app names."
 (let ((consult-omni-apps-use-cache nil))
   (consult-omni-apps--cached-items consult-omni-apps-cached-apps ".*")))
 #+end_src
@@ -7021,7 +7026,7 @@ well as the function
 ***** format
 #+begin_src emacs-lisp
 (defun consult-omni-mu--format-candidate (cand highlight)
-  "Format CAND from `consult-omni-mu4e'
+  "Format CAND from `consult-omni-mu4e'.
 
 Description of Arguments:
 
@@ -7588,7 +7593,7 @@ well as the function
 ***** doi to url
 #+begin_src emacs-lisp
 (defun consult-omni--doi-to-url (doi)
-  "Converts DOI value to target url."
+  "Convert DOI value to target url."
   (let ((out))
     (let* ((doi (if doi (format "%s" doi)))
            (url (concat consult-omni-doiorg-api-url doi)))

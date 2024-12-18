@@ -38,7 +38,7 @@
   "History variables for selected items of `consult-omni-doi'.")
 
 (defun consult-omni--doi-to-url (doi)
-  "Converts DOI value to target url."
+  "Convert DOI value to target url."
   (let ((out))
     (let* ((doi (if doi (format "%s" doi)))
            (url (concat consult-omni-doiorg-api-url doi)))

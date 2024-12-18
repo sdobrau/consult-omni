@@ -42,7 +42,7 @@
 
 ;;; Group
 (defgroup consult-omni nil
-  "Consulting omni sources"
+  "Consulting omni sources."
   :group 'convenience
   :group 'minibuffer
   :group 'consult
@@ -1953,8 +1953,12 @@ Adds PREFIX and SUFFIX to the name if non-nil."
 (defun consult-omni--func-generate-docstring (source-name &optional dynamic)
   "Make a generic documentaion string for an interactive command.
 
-DYNAMIC is a boolean that describes whether the funciton is a dynamic one
-or not.
+DEscription of Arguments:
+
+  SOURCE-NAME a string; name of the source \(e.g. “Google”\)
+  DYNAMIC     a boolean; whether the funciton is dynamic or not.
+              dynamic here means dynamic completion in minibuffer like
+              consult-grep behavior.
 
 This is used to make docstring for function made by
 `consult-omni-define-source'."
