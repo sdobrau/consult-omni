@@ -1566,8 +1566,7 @@ Adopted from `consult--multi-group'."
 
 Adopted from `consult--multi-predicate'."
   (let* ((src (consult--multi-source sources cand))
-         (narrow (plist-get src :narrow))
-         (type (or (car-safe narrow) narrow -1))
+         (narrow (or (plist-get src :narrow) -1))
          (pred (plist-get src :predicate))
          (show t))
     (if pred
@@ -1577,8 +1576,11 @@ Adopted from `consult--multi-predicate'."
          ((and (functionp pred) (> (car (func-arity pred)) 0))
           (setq show (funcall pred cand)))))
     (and show
-         (or (eq consult--narrow type)
-             (not (or consult--narrow (plist-get src :hidden)))))))
+          (or (pcase narrow
+                (`((,_ . ,_) . ,_) (assq consult--narrow narrow))
+                (`(,k . ,_) (eq consult--narrow k))
+                (k (eq consult--narrow k)))
+              (not (or consult--narrow (plist-get src :hidden)))))))
 
 (defun consult-omni--multi-enabled-sources (sources)
   "Return vector of enabled SOURCES.
@@ -1696,12 +1698,14 @@ Description of Arguments:
   ASYNC  a funciton; the sink function that updates the minibuffer
          candidates list
   SOURCE a plist with properties that define the source to search.
-         for example see `consult-omni-sources-alist'.
+         for example see `consult-omni-sources-alist'
   INPUT  a string; the user's input to pass to the collecting function
          \(e.g. the value of :items field in the SOURCE plist\)
   ARGS   list of ARGS to pass to the collecting function
          \(e.g. the value of :items field in the SOURCE plist\)
-  IDX    is passed to `consult-omni--multi-propertize'."
+  IDX    is passed to `consult-omni--multi-propertize'
+
+This is adopted from `consult--async-process'"
   (let* ((name (plist-get source :name))
          (builder (plist-get source :items))
          (transform (consult-omni--get-source-prop name :transform))
@@ -1864,9 +1868,9 @@ Description of Arguments:
              (setq current action)
              (consult-omni--multi-update-candidates async sources action args)
              (funcall async 'refresh))))
-        ('destroy
+        ((or 'destroy 'cancel)
          (consult-omni--multi-cancel)
-         (funcall async 'destroy))
+         (funcall async action))
         (_ (funcall async action))))))
 
 (defun consult-omni--multi-dynamic-command (sources &rest args)
@@ -2359,8 +2363,7 @@ DOCSTRING    the docstring for the function that is returned."
                                              :title item
                                              :url nil
                                              :query query
-                                             :search-url nil
-                                             )))
+                                             :search-url nil)))
                              results)))))))
 
 (cl-defun consult-omni--make-source-from-consult-source (consult-source &rest args &key type request transform on-setup on-preview on-return on-exit state on-callback on-new group narrow-char category interactive search-hist select-hist face annotate enabled sort predicate preview-key require-match docstring &allow-other-keys)
