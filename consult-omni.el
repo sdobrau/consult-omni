@@ -5,10 +5,10 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4"))
+;;         (consult "1.9"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -264,12 +264,24 @@ This variable is a list of strings or symbols;
                  (function :tag "Google autosuggestion (i.e. `consult-omni-dynamic-google-autosuggest')" consult-omni-dynamic-google-autosuggest)
                  (function :tag "Other custom interactive command")))
 
+(defcustom consult-omni-async-min-input consult-async-min-input
+  "Minimum number of characters needed, before async process is called.
+
+This applies to dynamic collection commands, e.g., `consult-omni-google'.
+This is similar to `consult-async-min-input' but specifically for
+consult-omni dynamic commands.
+
+By default inherits from `consult-async-min-input'."
+  :group 'consult-omni
+  :type '(natnum :tag "Number of characters"))
+
+
 (defcustom consult-omni-dynamic-input-debounce consult-async-input-debounce
   "Input debounce for dynamic commands.
 
 The dynamic collection process is started only when
 there has not been new input for consult-omni-dynamic-input-debounce seconds.
-This is similarto `consult-async-input-debounce' but
+This is similar to `consult-async-input-debounce' but
 specifically for consult-omni dynamic commands.
 
 By default inherits from `consult-async-input-debounce'."
@@ -301,16 +313,16 @@ By default inherits from `consult-async-refresh-delay'."
   :type '(float :tag "delay in seconds"))
 
 (defcustom consult-omni-search-engine-alist '(("Bing" . "https://www.bing.com/search?q=%s")
-                                            ("Brave" .  "https://search.brave.com/search?q=%s")
-                                            ("DuckDuckGo" . "https://duckduckgo.com/?q=%s")
-                                            ("Google" . "https://www.google.com/search?q=%s")
-                                            ("Perplexity" .  "https://www.perplexity.ai/search?q=%s")
-                                            ("PubMed" . "https://pubmed.ncbi.nlm.nih.gov/?q=%s")
-                                            ("Wikipedia" . "https://en.wikipedia.org/wiki/Special:Search/%s")
-                                            ("YouTube" . "https://www.youtube.com/search?q=%s")
-                                            ("gptel" . #'consult-omni--gptel-preview)
-                                            ("Other" . #'consult-omni--choose-other-source-for-new))
-"Alist of search engine names and URLs.
+                                              ("Brave" .  "https://search.brave.com/search?q=%s")
+                                              ("DuckDuckGo" . "https://duckduckgo.com/?q=%s")
+                                              ("Google" . "https://www.google.com/search?q=%s")
+                                              ("Perplexity" .  "https://www.perplexity.ai/search?q=%s")
+                                              ("PubMed" . "https://pubmed.ncbi.nlm.nih.gov/?q=%s")
+                                              ("Wikipedia" . "https://en.wikipedia.org/wiki/Special:Search/%s")
+                                              ("YouTube" . "https://www.youtube.com/search?q=%s")
+                                              ("gptel" . #'consult-omni--gptel-preview)
+                                              ("Other" . #'consult-omni--choose-other-source-for-new))
+  "Alist of search engine names and URLs.
 
 car of each item is the name of the engine
 cdr of items must be either:
@@ -318,7 +330,7 @@ cdr of items must be either:
 - an elisp funciton that takes a single string input for query"
   :group 'consult-omni
   :type '(alist :key-type string :value-type (choice (string :tag "a search url string with %s for the query")
-                                                      (function :tag " an elisp funciton that takes a single string input for query"))))
+                                                     (function :tag " an elisp funciton that takes a single string input for query"))))
 
 ;;; Other Variables
 
@@ -1647,9 +1659,10 @@ Description of Arguments:
          (face (and (plist-member source :face) `(face ,(plist-get source :face))))
          (cat (plist-get source :category))
          (transform (consult-omni--get-source-prop name :transform))
+         (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input))
          (fun (plist-get source :items))
          (items))
-    (when (functionp fun)
+    (when (and (functionp fun) (stringp input) (>= (length input) min-input))
       (cond
        ((and (integerp (cdr (func-arity fun))) (< (cdr (func-arity fun)) 1))
         (setq items (funcall fun)))
@@ -1678,13 +1691,15 @@ Description of Arguments:
   (let* ((name (plist-get source :name))
          (face (and (plist-member source :face) `(face ,(plist-get source :face))))
          (cat (plist-get source :category))
-         (transform (consult-omni--get-source-prop name :transform)))
+         (transform (consult-omni--get-source-prop name :transform))
+         (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input)))
+    (when (and (stringp input) (>= (length input) min-input))
     (funcall (plist-get source :items) input
              :callback (lambda (response-items)
                          (when response-items
                            (when transform (setq response-items (funcall transform response-items input)))
                            (funcall async (consult-omni--multi-propertize response-items cat idx face))
-                           (funcall async 'refresh))) args)))
+                           (funcall async 'refresh))) args))))
 
 (defun consult-omni--multi-update-async-candidates (async source idx input &rest args)
   "Asynchronously collect candidates for INPUT from a “async” SOURCE.
@@ -1705,6 +1720,7 @@ Description of Arguments:
   (let* ((name (plist-get source :name))
          (builder (plist-get source :items))
          (transform (consult-omni--get-source-prop name :transform))
+         (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input))
          (filter (consult-omni--get-source-prop name :filter))
          (props (seq-drop-while (lambda (x) (not (keywordp x))) args))
          (proc)
@@ -1714,7 +1730,7 @@ Description of Arguments:
          (consult-omni--async-log-buffer (concat " *consult-omni-async-log--" name "*"))
          (cat (plist-get source :category))
          (query (car (consult-omni--split-command input)))
-         (args (funcall builder input)))
+         (args (when (and (stringp input) (>= (length input) min-input)) (funcall builder input))))
     (unless (stringp (car args))
       (setq args (car args)))
     (when proc
@@ -1831,46 +1847,57 @@ Description of Arguments:
              nil))))
       (cl-incf idx))))
 
-(defun consult-omni--multi-dynamic-collection (async sources &rest args)
+(defun consult-omni--multi-dynamic-collection (async sources &optional min-input valid-input &rest args)
   "Dynamically compute candidates from SOURCES.
 
 This is a generalized replacement for `consult--async-process', and
 `consult--dynamic-collection' that allows collecting candidates from
-synchronous (e.g. elisp funciton with no input args), dynamic (e.g. elip
-function with input args), or asynchronous (e.g. shell process) SOURCES.
+synchronous \(e.g. elisp funciton with no input args\), dynamic \(e.g. elip
+function with input args\), or asynchronous \(e.g. shell process\) SOURCES.
 
 Description of Arguments:
-  ASYNC   a funciton; the sink function
-  SOURCES a list; sources to use
-  ARGS    a list of args; extra arguments passed to each source
-          ARGS is passed to `consult-omni--multi-update-candidates'"
+  ASYNC       a funciton; the sink function
+  SOURCES     a list; sources to use
+  MIN-INPUT   a number; minimum number of characters for fetching result
+  VALID-INPUT a function; that checks if user's input is valid and if so
+              returns the input \(or a transformed version of input\).
+  ARGS        a list of args; extra arguments passed to each source
+              ARGS is passed to `consult-omni--multi-update-candidates'"
   (setq async (consult--async-indicator async))
-  (let ((consult-omni--async-processes (list))
+  (let ((min-input (or min-input consult-omni-async-min-input))
+        (consult-omni--async-processes (list))
         (consult-omni--dynamic-timers (list))
         (current))
     (lambda (action)
       (pcase action
         ('nil
          (funcall async nil))
-        (""
-         (setq current nil)
-         (consult-omni--multi-cancel)
-         (funcall async 'flush)
-         (funcall async 'indicator 'finished))
         ((pred stringp)
-         (if (equal action current)
+         (if (or (length< action min-input) (equal action current))
              (funcall async 'indicator 'finished)
            (progn
-             (setq current action)
-             (consult-omni--multi-update-candidates async sources action args)
-             (funcall async 'refresh))))
+           (when (and valid-input (functionp valid-input))
+             (setq action (funcall valid-input action)))
+           (setq current action)
+           (consult-omni--multi-update-candidates async sources action args)
+           (funcall async 'refresh))))
+        ('cancel
+         (setq current nil)
+         (consult-omni--multi-cancel)
+         (funcall async 'flush))
         ('destroy
          (consult-omni--multi-cancel)
          (funcall async 'destroy))
         (_ (funcall async action))))))
 
-(defun consult-omni--multi-dynamic-command (sources &rest args)
+(defun consult-omni--multi-dynamic-command (sources &optional min-input valid-input &rest args)
   "Dynamically collect with input splitting on multiple SOURCES.
+
+MIN-INPUT is the minimum number of characters before the synamic command
+fetches results.
+
+VALID-INPUT is a function that checks if the user's input is valid.  It
+returns the input with posssible trasnformatioin when valid.
 
 ARGS is passed to each source \(by passing it along with SOURCES to
 `consult-omni--multi-dynamic-collection'\).
@@ -1882,11 +1909,11 @@ and asynchronous sources."
   (thread-first
     (consult--async-sink)
     (consult--async-refresh-timer)
-    (consult-omni--multi-dynamic-collection sources args)
+    (consult-omni--multi-dynamic-collection sources min-input valid-input args)
     (consult--async-throttle)
     (consult--async-split)))
 
-(cl-defun consult-omni--multi-dynamic (sources args &rest options)
+(cl-defun consult-omni--multi-dynamic (sources &optional min-input valid-input args &rest options)
   "Select candidates with dynamic input from a list of SOURCES.
 
 This is similar to `consult--multi' but with dynamic update of candidates
@@ -1894,14 +1921,18 @@ and accepts async (shell commands simlar to `consult--grep'),
 or dynamic sources (elisp functions like `consult-line-multi') as well.
 
 Description of Arguments:
-  SOURCES a list; sources to use
-  ARGS    list of args; additional arguments sent to each SOURCE's
-          collection function.
-  OPTIONS are similar to options in `consult--multi'."
+  SOURCES     a list; sources to use
+  ARGS        list of args; additional arguments sent to each SOURCE's
+              collection function.
+  MIN-INPUT   a number; minimum number of charatcers for fetching results
+  VALID-INPUT a function; that checks if the user's input is valid.
+              It is called with one argument, the user's input string and
+              returns the input with possible trasnformations when valid.
+  OPTIONS   are similar to options in `consult--multi'."
   (let* ((sources (consult-omni--multi-enabled-sources sources))
          (selected
           (apply #'consult--read
-                 (consult-omni--multi-dynamic-command sources args)
+                 (consult-omni--multi-dynamic-command sources min-input valid-input args)
                  (append
                   options
                   (list
@@ -2033,37 +2064,41 @@ LOOKUP, REQUIRE-MATCH, SELECT-HIST-VAR, ANNOTATE, PREVIEW-KEY, and SORT."
          (selected (cond
                     ((consp selected) (car-safe selected))
                     (t selected)))
-         (selected (if match selected (string-trim selected (consult--async-split-initial nil))))
+         (selected (if match selected (and (stringp selected) (string-trim selected (consult--async-split-initial nil)))))
          (callback-func (and (not no-callback)
                              (or (and match source (consult-omni--get-source-prop source :on-callback))
                                  (and source (consult-omni--get-source-prop source :on-new))))))
     (unless consult-omni-log-level
       (consult-omni--kill-hidden-buffers)
       (consult-omni--kill-url-dead-buffers))
+    (when selected
     (cond
      ((and match (functionp callback-func))
       (funcall callback-func selected))
      ((functionp callback-func)
       (setq selected (funcall callback-func selected))))
-    selected))
+    selected)))
 
-(defun consult-omni--call-dynamic-command (initial prompt no-callback args source-name request category face lookup require-match search-hist-var select-hist-var add-hist preview-key sort)
+(defun consult-omni--call-dynamic-command (initial prompt no-callback args min-input valid-input source-name request category face lookup require-match search-hist-var select-hist-var add-hist preview-key sort)
   "Internal function to make dynamic `consult--read' command.
 
 Do not use this function directly, use `consult-omni-define-source' macro
 instead.  Refer to `consult-omni-define-source' for details on INITIAL,
-PROMPT, NO-CALLBACK, ARGS, SOURCE-NAME, REQUEST, CATEGORY, FACE, LOOKUP,
-REQUIRE-MATCH, SEARCH-HIST-VAR, SELECT-HIST-VAR, ADD-HIST, PREVIEW-KEY,
-and SORT."
+PROMPT, NO-CALLBACK, ARGS, MIN-INPUT, VALID-INPUT, SOURCE-NAME, REQUEST,
+CATEGORY, FACE, LOOKUP, REQUIRE-MATCH, SEARCH-HIST-VAR, SELECT-HIST-VAR,
+ADD-HIST, PREVIEW-KEY, and SORT."
 
   (let* ((consult-async-refresh-delay consult-omni-dynamic-refresh-delay)
          (consult-async-input-throttle consult-omni-dynamic-input-throttle)
          (consult-async-input-debounce consult-omni-dynamic-input-debounce)
          (setup (consult-omni--get-source-prop source-name :on-setup))
          (exit (consult-omni--get-source-prop source-name :on-exit))
+         (min-input (or min-input consult-omni-async-min-input))
          (prompt (or prompt (concat "[" (propertize (format "%s" (consult-omni--func-name source-name)) 'face 'consult-omni-prompt-face) "]" " Search: ")))
          (_ (if (functionp setup) (funcall setup)))
          (selected (consult-omni--multi-dynamic (list (consult-omni--source-name source-name))
+                                                min-input
+                                                valid-input
                                                 args
                                                 :prompt prompt
                                                 :history '(:input search-hist-var)
@@ -2096,7 +2131,7 @@ and SORT."
 ;;; Macros
 
 ;;;###autoload
-(cl-defmacro consult-omni-define-source (source-name &rest args &key type request transform filter on-setup on-preview on-return on-exit state on-callback on-new require-match interactive lookup group narrow-char category search-hist select-hist add-hist face annotate enabled sort predicate preview-key docstring  &allow-other-keys)
+(cl-defmacro consult-omni-define-source (source-name &rest args &key type request transform filter min-input valid-input on-setup on-preview on-return on-exit state on-callback on-new require-match interactive lookup group narrow-char category search-hist select-hist add-hist face annotate enabled sort predicate preview-key docstring  &allow-other-keys)
   "Macro to make a consult-omni-source for SOURCE-NAME with ARGS.
 
 Generates the following:
@@ -2109,20 +2144,24 @@ Description of Arguments:
 
   Brief Description:
 
-  ==========   ========  ==============================================
+  ==========   ========  =================================================
   Keyword      Type      Explanation
-  ==========   ========  ==============================================
+  ==========   ========  =================================================
   TYPE         symbol    How to collect items for source?
                          \(one of \='sync, \='dynamic, or \='async\)
   REQUEST      function  Fetch results from source
   TRANSFORM    funciton  Function to transform/format candidates
   FILTER       funciton  Function to filter candidates
+  MIN-INPUT    number    Minimum number of characters for fetching results
+                         This is used in dynamic commands only
+  VALID-INPUT  function  Predicate function for valid user's input string
+                         This is used in dynamic commands only
   ON-SETUP     function  Setup action in `consult--read'
   ON-PREVIEW   function  Preview action in `consult--read'
   ON-RETURN    function  Return action in `consult--read'
   ON-EXIT      function  Exit action in `consult--read'
   STATE        function  STATE passed to `consult--read'
-                         (bypasses ON-PREVIEW and ON-RETURN)
+                         \(bypasses ON-PREVIEW and ON-RETURN\)
   ON-CALLBACK  function  Function called on selected candidate
   ON-NEW       function  Function called on non-existing candidate
   REUIRE-MATCH function  Can non-matching candidates be selected
@@ -2141,7 +2180,7 @@ Description of Arguments:
   PREDICATE    function  Passed as PREDICATE to `consult--read'
   PREVIEW-KEY  key       Passed as PREVIEW-KEY to `consult--read'
   DOCSTRING    string    DOCSTRING for the SOURCE-NAME variable
-  =====================================================================
+  ========================================================================
 
   Detailed Decription:
 
@@ -2199,6 +2238,15 @@ Description of Arguments:
          where the process returns a list of candiate strings,
          in which case FILTER is applied to all candidates using `seq-filter'.
          See `consult-omni--locate-filter' for an example.
+
+  MIN-INPUT is a the minimum required number of characters in user's input
+            before the input is sent to the source to fetch results/items
+
+  VALID-INPUT is a function that checks if the user's input is valid for
+              the source.  It is called with one argument, the user's input
+              string, and should return the input \(with possible
+              transformations\) when the inputn is valid and \='nil when
+              the input is not valid.
 
   ON-SETUP is a function called when setting up the minibuffer.
            This is used inside an state funciton by `consult--read.
@@ -2287,7 +2335,7 @@ Description of Arguments:
        (defun ,(consult-omni--func-name source-name) (&optional initial prompt no-callback &rest args)
          ,(or docstring (consult-omni--func-generate-docstring source-name t))
          (interactive "P")
-         (consult-omni--call-dynamic-command initial prompt no-callback args ,source-name ,request ,category ,face ,lookup ,require-match ,search-hist ,select-hist ,add-hist ,preview-key ,sort)))
+         (consult-omni--call-dynamic-command initial prompt no-callback args ,min-input ,valid-input ,source-name ,request ,category ,face ,lookup ,require-match ,search-hist ,select-hist ,add-hist ,preview-key ,sort)))
      ;; make a static interactive command called consult-omni-%s-static (%s=source-name)
      (unless (eq ,interactive 'static)
        (defun ,(consult-omni--func-name source-name nil "-static") (&optional input prompt no-callback &rest args)
@@ -2302,6 +2350,8 @@ Description of Arguments:
                                                            :source (consult-omni--source-name ,source-name)
                                                            :face ,face
                                                            :request-func ,request
+                                                           :min-input ,min-input
+                                                           :valid-input ,valid-input
                                                            :transform ,transform
                                                            :filter ,filter
                                                            :on-setup ,on-setup
@@ -2348,8 +2398,7 @@ DOCSTRING    the docstring for the function that is returned."
                       (fun  (plist-get ',source :items))
                       (results (cond
                                 ((functionp fun) (funcall fun))
-                                ((listp fun) fun)
-                                ))
+                                ((listp fun) fun)))
                       (source (substring-no-properties (plist-get ',source :name))))
            (delq nil (mapcar (lambda (item)
                                (if (consp item) (setq item (or (car-safe item) item)))
@@ -2359,20 +2408,19 @@ DOCSTRING    the docstring for the function that is returned."
                                              :title item
                                              :url nil
                                              :query query
-                                             :search-url nil
-                                             )))
+                                             :search-url nil)))
                              results)))))))
 
-(cl-defun consult-omni--make-source-from-consult-source (consult-source &rest args &key type request transform on-setup on-preview on-return on-exit state on-callback on-new group narrow-char category interactive search-hist select-hist face annotate enabled sort predicate preview-key require-match docstring &allow-other-keys)
+(cl-defun consult-omni--make-source-from-consult-source (consult-source &rest args &key type request min-input valid-input transform on-setup on-preview on-return on-exit state on-callback on-new group narrow-char category interactive search-hist select-hist face annotate enabled sort predicate preview-key require-match docstring &allow-other-keys)
   "Make a consult-omni source from a consult source plist, CONSULT-SOURCE.
 
 all ARGS are passed to `consult-omni-define-source' macro.
 
 See `consult-omni-define-source' for more details on TYPE, REQUEST,
-TRANSFORM, ON-SETUP, ON-PREVIEW, ON-RETURN, ON-EXIT, STATE, ON-CALLBACK,
-ON-NEW, GROUP, NARROW-CHAR, CATEGORY, INTERACTIVE, SEARCH-HIST,
-SELECT-HIST, FACE, ANNOTATE, ENABLED, SORT, PREDICATE, PREVIEW-KEY,
-REQUIRE-MATCH, DOCSTRING."
+MIN-INPUT, VALID-INPUT, TRANSFORM, ON-SETUP, ON-PREVIEW, ON-RETURN,
+ON-EXIT, STATE, ON-CALLBACK, ON-NEW, GROUP, NARROW-CHAR, CATEGORY,
+INTERACTIVE, SEARCH-HIST, SELECT-HIST, FACE, ANNOTATE, ENABLED, SORT,
+PREDICATE, PREVIEW-KEY, REQUIRE-MATCH, DOCSTRING."
   (let* ((source (if (plistp consult-source) consult-source (and (boundp consult-source) (eval consult-source))))
          (source (if (plistp source) source (eval source)))
          (name (and (plistp source) (substring-no-properties (plist-get source :name))))
@@ -2401,6 +2449,8 @@ REQUIRE-MATCH, DOCSTRING."
                                         :category ',category
                                         :type ',type
                                         :request (or ,request (consult-omni--make-fetch-function ,source))
+                                        :min-input ,min-input
+                                        :valid-input ,valid-input
                                         :transform ,transform
                                         :on-setup ',on-setup
                                         :on-preview ',on-preview
@@ -2422,7 +2472,7 @@ REQUIRE-MATCH, DOCSTRING."
 ;;; Interactive Commands
 
 ;;;###autoload
-(defun consult-omni-multi (&optional initial prompt sources no-callback &rest args)
+(defun consult-omni-multi (&optional initial prompt sources no-callback min-input valid-input &rest args)
   "Interactive “multi-source dynamic search”.
 
 This is an interactive command that fetches results form all the sources
@@ -2443,6 +2493,12 @@ Description of Arguments:
                 (see `consult-buffer-sources' for example.)
               If SOURCES is nil, `consult-omni-multi-sources' is used
               instead.
+  MIN-INPUT   a number; minimum number of input characters before
+              fetching results.
+  VALID-INPUT a function; that chekcs if the user's input is valid.  It is
+              called with one argument, the user's input string, and
+              returns the input \(with possible transformations\) when
+              valid.
   NO-CALLBACK a boolean; If t, only the selected candidate is returned
               without any callback action.
 
@@ -2507,6 +2563,8 @@ URL `https://github.com/minad/consult'."
          (selected
           (consult-omni--multi-dynamic
            sources
+           min-input
+           valid-input
            args
            :prompt prompt
            :sort t

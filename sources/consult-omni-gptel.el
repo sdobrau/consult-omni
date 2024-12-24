@@ -5,12 +5,12 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
+;;         (consult "1.9")
 ;;         (gptel "0.7.0")
-;;         (consult-omni "0.1"))
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -251,6 +251,15 @@ well as the function
               (setq output (list annotated-result)))))))
     output))
 
+(defun consult-omni--gptel-valid-input-p (&optional input)
+  "Check if INPUT has a space in it."
+  (cond
+   ((stringp input)
+    (if (string-match-p "\s" input)
+        input
+      nil))
+   (t input)))
+
 (cl-defun consult-omni--gptel-fetch-results (input &rest args &key callback &allow-other-keys)
   "Fetch chat response for INPUT from gptel with ARGS.
 
@@ -277,6 +286,8 @@ well as the function
                             :require-match t
                             :face 'consult-omni-ai-title-face
                             :request #'consult-omni--gptel-fetch-results
+                            :min-input 5
+                            ;:valid-input #'consult-omni--gptel-valid-input-p
                             :on-preview #'consult-omni--gptel-preview
                             :on-return #'identity
                             :on-callback #'consult-omni--gptel-preview

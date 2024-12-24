@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
-;;         (consult-omni "0.1"))
+;;         (consult "1.9")
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -253,7 +253,6 @@ well as the function
     (delq nil (cl-loop for item in  projects
                        collect (let* ((source "Projects")
                                (path (car item))
-                               (_ (print path))
                                (project (and (stringp path) (file-exists-p path) (project--find-in-directory path)))
                                (title (or (and project (project-root project)) path))
                                (name (or (and project (project-name project)) (file-name-nondirectory path)))
@@ -261,7 +260,6 @@ well as the function
                                (nfiles (and (listp p-files) (length p-files)))
                                (size (and (stringp title) (file-exists-p title) (file-size-human-readable (file-attribute-size (file-attributes title)))))
                                (decorated (consult-omni--projects-format-candidate :source source :path title  :name name :nfiles nfiles :size size)))
-                                  ;; (print decorated)
                           (when (stringp decorated) (add-text-properties 0 1 `(:source ,source :title ,title :query ,query :project ,project :dir ,title :name ,name) decorated))
                           decorated)))))
 
@@ -274,6 +272,7 @@ well as the function
                             ;; :face 'consult-omni-files-title-face
                             :on-setup #'project--read-project-list
                             :request #'consult-omni--projects-fetch-results
+                            :min-input 0
                             :on-preview (lambda (cand) (funcall consult-omni-projects-preview-func cand))
                             :on-callback (lambda (cand) (funcall consult-omni-projects-callback-func cand))
                             :on-new (lambda (cand) (run-hook-with-args 'consult-omni-create-project-hook (funcall consult-omni-projects-new-func cand)))

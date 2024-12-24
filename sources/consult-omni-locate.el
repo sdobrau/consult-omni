@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
-;;         (consult-omni "0.1"))
+;;         (consult "1.9")
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -118,11 +118,11 @@ well as the function
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
-;;         (consult-omni "0.1"))
+;;         (consult "1.9")
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience

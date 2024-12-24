@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
-;;         (consult-omni "0.1"))
+;;         (consult "1.9")
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -35,6 +35,40 @@ See `consult-locate-args' for example."
   :group 'consult-omni
   :type '(choice string (repeat (choice string sexp))))
 
+(defcustom consult-omni-numi-regexp-pattern "^=\\(.*\\)?"
+  "Regexp to detect mathematical formula?
+
+The first capturing group will be used as input for `consult-omni-numi-args'.
+If there is no capture group, the whole input query is used.
+
+Note that the default setting is simply any string with a leading “=”.
+This allows the user to see the results from Numi calculator \(i.e.
+`consult-omni--numi-fetch-results')\ with any string without consult-omni
+detecting (i.e. trying to guess) what is a mathematical equation.  This
+can specially be useful in multi-source searches, if the user does not
+want to see random results from the Numi calculator on every search string.
+The downside of this approach is that the user has to type “=” every time
+before seeing results form the Numi calculator.  For example to see the
+result of the equation 2+3, the user has to type:
+  “#=2+3”
+\(Note that the leading “#” above is from the default perl style of
+`consult-async-split-style' and otherwise not neccessary\).
+
+Alternatively, one can change this variable to regexp pattern that
+detects/guesses a mathematical equation \(for example by looking for
+strings that contain digits and/or mathematical operators\).  For an
+example, see the default choices for this custom variable.  This would
+remove the need to type a leading character every time but at the same
+time may miss some edge cases if the user's query/equation does not match
+the regexp.
+
+To be safe the default setting of this variable uses the former approach
+with a leading “=” character."
+
+  :group 'consult-omni
+  :type '(choice (regexp :tag "(Default) formula after =" "^=\\(.*\\)?")
+                 (regexp :tag "Any string with digits, operators or brackets" "\\(.*[[:digit:]\/\*\+-=%^&$\(\{\[].*\\)")))
+
 (defun consult-omni--numi-preview (cand)
   "Preview function for CAND from `consult-omni-numi'."
   (ignore))
@@ -51,6 +85,17 @@ QUERY is the user input string."
   (cl-loop for candidate in candidates
            when (not (equal candidate "?"))
            collect candidate))
+
+(defun consult-omni--numi-valid-input-p (&optional input)
+  "Check if INPUT matches `consult-omni-numi-regexp-pattern'."
+  (cond
+   ((stringp input)
+    (if consult-omni-numi-regexp-pattern
+        (if (string-match consult-omni-numi-regexp-pattern input nil)
+            (or (match-string 1 input) input)
+          nil)
+      input))
+   (t input)))
 
 (cl-defun consult-omni--numi-builder (input &rest args &key callback &allow-other-keys)
   "Make builder command line args for “numi-cli” with INPUT and ARGS.
@@ -74,6 +119,7 @@ well as the function
                             :require-match t
                             :face 'consult-omni-engine-title-face
                             :request #'consult-omni--numi-builder
+                            :vali-input #'consult-omni--numi-valid-input-p
                             :filter #'consult-omni--numi-filter
                             :on-preview #'ignore
                             :on-return #'identity

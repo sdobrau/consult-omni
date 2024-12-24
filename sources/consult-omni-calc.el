@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
-;;         (consult-omni "0.1"))
+;;         (consult "1.9")
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -50,11 +50,11 @@ of the equation 2+3, the user has to type:
 \(Note that the leading “#” above is from the default perl style of
 `consult-async-split-style' and otherwise not neccessary\).
 
-Alternatively, one can change this cariable to regexp pattern that
+Alternatively, one can change this variable to regexp pattern that
 detects/guesses a mathematical equation \(for example by looking for
 strings that contain digits and/or mathematical operators\).  For an
 example, see the default choices for this custom variable.  This would
-remove the need to type a leading character evertytime but at the same
+remove the need to type a leading character every time but at the same
 time may miss some edge cases if the user's query/equation does not match
 this regexp.
 
@@ -80,6 +80,17 @@ results, which may not be desirable in multi-source omni searches."
     (kill-new (concat equ " => " result))
     (kill-new result)))
 
+(defun consult-omni--calc-valid-input-p (&optional input)
+  "Check if INPUT matches `consult-omni-calc-regexp-pattern'."
+  (cond
+   ((stringp input)
+    (if consult-omni-calc-regexp-pattern
+        (if (string-match consult-omni-calc-regexp-pattern input nil)
+            (or (match-string 1 input) input)
+          nil)
+      input))
+   (t input)))
+
 (cl-defun consult-omni--calc-fetch-results (input &rest args &key callback &allow-other-keys)
   "Calculate the result of possible math equations in INPUT with ARGS.
 
@@ -98,7 +109,7 @@ URL `https://github.com/armindarvish/consult-omni'
 
 To change this behavior, `consult-omni-calc-regexp-pattern' can be edited.
 For example, to remove the leading “=”, in which case the user can simply
-enter “2+3” to see the results.  Keep in mind that the densures that
+enter “2+3” to see the results.  Keep in mind this is to ensure that
 consult-omni-calc returns results only when the user intends the query as
 a calc equation.  Removing “=”, may sometimes lead to confusing answers
 from the calculator in multi-source searches, because it passes the INPUT
@@ -138,10 +149,6 @@ well as the function
                (calc-eval-error t)
                (result)
                (annotated-result))
-    (when consult-omni-calc-regexp-pattern
-      (if (string-match consult-omni-calc-regexp-pattern query nil)
-          (setq query (or (match-string 1 query) query))
-        (setq query nil)))
     (when query
       (condition-case err
           (if convert
@@ -172,6 +179,8 @@ well as the function
                             :require-match t
                             :face 'consult-omni-date-face
                             :request #'consult-omni--calc-fetch-results
+                            :min-input 0
+                            :valid-input #'consult-omni--calc-valid-input-p
                             :on-preview #'ignore
                             :on-return #'identity
                             :on-callback #'consult-omni--calc-callback

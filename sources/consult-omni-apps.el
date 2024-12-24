@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
-;;         (consult-omni "0.1"))
+;;         (consult "1.9")
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -340,6 +340,7 @@ to update list of candidates in the minibuffer."
                             :type 'sync
                             :require-match t
                             :request #'consult-omni--apps-list-apps
+                            :min-input 0
                             :on-preview #'ignore
                             :on-return #'identity
                             :on-callback #'consult-omni--apps-callback
