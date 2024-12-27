@@ -8,6 +8,7 @@
 #+html: <a href="https://github.com/armindarvish"><img alt="Armin Darvish" src="https://img.shields.io/static/v1?label=Armin%20Darvish&message=consult-omni&color=00A8B0&logo=github"/></a>
 #+html: <a href="https://www.gnu.org/software/emacs/"><img alt="GNU Emacs" src="https://img.shields.io/static/v1?label=Made%20For&message=GNU%20Emacs&color=7a5aba&logo=gnuemacs&logoColor=white"/></a>
 
+For the latest news see [[file:CHANGELOG.org][The ChangeLog]].
 
 * About =consult-omni=
 
@@ -25,7 +26,7 @@ Here is the mandatory screenshot:
 [[https://github.com/armindarvish/consult-web/blob/screenshots/screenshots/consult-omni.gif]]
 
 
-In the screenshot above, I use a key shortcut to open an Emacs frame and call =consult-omni= (similar to calling MacOS spotlight) and search for the term “emacs”, then move around and look at previews from different sources including application, gptel, Brave, Google, YouTube, elfeed, mu4e, ....
+In the screenshot above, I use a key shortcut to open an Emacs frame and call =consult-omni= (similar to calling MacOS spotlight) and search for the term “emacs”, then move around and look at previews from different sources including Desktop Applications, gptel, Brave, Google, YouTube, elfeed, mu4e, ....
 
 
 Here is another screenshot demonstrating using consult-omni as an application launcher:
@@ -175,14 +176,14 @@ Change query parameters on the fly by passing arguments. Select a random set of 
 ** Precautions
 Before you start, make sure you understand three points:
 1. *Important Note 1*: This is work in progress in its early stage and bugs and issues are very much expected.
-2. *Important Note 2*: You should consider the general risks of using Emacs to browse the web. By default, all codes are trusted inside Emacs and browsers are naturally the target of many attacks. Therefore, it is important to be aware of the risks and be intentional about what links you open (or do not open) inside Emacs. By default, consult-omni would only be opening web pages (or calling APIs of) the sources (e.g. search engines, ...) and not any other websites. It's up to the user then to decide how she or he wants to open the links and chose their own risk tolerance. consult-omni provides customization variables for different actions (e.g. opening links in external browser v.s. in Emacs), so make sure you know how to set everything up.
+2. *Important Note 2*: You should consider the general risks of using Emacs to browse the web. By default, all codes are trusted inside Emacs and browsers are naturally the target of many attacks. Therefore, it is important to be aware of the risks and be intentional about what links you open (or do not open) inside Emacs. By default, consult-omni would only be opening web pages (or calling APIs of) the sources (e.g. search engines, ...) and not any other websites. It's up to the user then to decide how she or he wants to open the links and chose their own risk tolerance. Keep in mind that consult-omni provides customization variables for different actions (e.g. opening links in external browser v.s. in Emacs), so make sure you know how to set everything up.
 3. *Important Note 3*: The functions provided in =consult-omni-sources=, provide a basic demonstration for integrating different services (such as search providers), however since each service comes with its own terms and conditions (that may change over time and vary from location to location), it is difficult to provide all-encompassing solutions and maintain them over time. consult-omni is agnostic of how you connect and integrate other services in your setup (because neither consult-omni nor Emacs collect any information of the users or their usage), and therefore ultimately only you the user are responsible for setting up everything correctly and understand consequences of the usage (e.g. costs of using paid APIs) and ensure to stay within the bounds of relevant laws and regulations for your use case (i.e. follow software user agreements, etc.). Therefore, it is important for you to read and understand how to use each service, and also understand what happens under the hood when you integrate the service with consult-omni. I try my best to provide documentation here as well as on the [[https://github.com/armindarvish/consult-omni/wiki][wiki pages]], and will try to help when possible but before you proceed understand that you do everything at your own risk.
 
 ** Installation
 If you want an example config see [[https://github.com/armindarvish/consult-omni?tab=readme-ov-file#drop-in-example-config][Drop-in *Example Config*]]. Here is some detailed explanation;
 
 *** Requirements
-In order to use consult-omni, you need Emacs >28.0 (I have not tested earlier versions) and you need [[https://github.com/minad/consult][consult]]. While this is the only requirements, I suggest you read the rest of this README. I do recommend some other packages and useful configurations for different settings. Some of those extra packages and settings can improve your experience of consult-omni, therefore you may want to consider installing them as well. For example, combining consult with other packages such as [[https://github.com/minad/vertico][vertico]], [[https://github.com/oantolin/orderless][orderless]], and [[https://github.com/oantolin/embark][embark]] can improve the functionality as well as user-experience.
+In order to use consult-omni, you need Emacs >28.0 (I have not tested earlier versions) and you need [[https://github.com/minad/consult][consult]]. While this is the only requirement, I suggest you read the rest of this README. I do recommend some other packages and useful configurations for different settings. Some of those extra packages and settings can improve your experience of consult-omni, therefore you may want to consider installing them as well. For example, combining consult with other packages such as [[https://github.com/minad/vertico][vertico]], [[https://github.com/oantolin/orderless][orderless]], and [[https://github.com/oantolin/embark][embark]] can improve the functionality as well as user-experience.
 
 *** Installing consult-omni Package
 consult-omni is not currently on [[https://elpa.gnu.org/packages/consult.html][ELPA]] or [[https://melpa.org/#/consult][MELPA]]. Therefore, you need to install it using an alternative non-standard package manager such as [[https://github.com/radian-software/straight.el][straight.el]], [[https://github.com/progfolio/elpaca][elpaca]], ... or use manual installation.
@@ -224,7 +225,7 @@ You can search *ALL* the default sources by loading the provided =consult-omni-s
 This provides sources for some popular services, and adds a long list of interactive commands (dynamic search, static search or both depending on the source). Over time I hope to add more services, hopefully by contribution from the community as well. Note that these are also good examples for you to learn how to add your own sources or tweak the current ones for your specific use-cases.
 
 **** load multiple sources but not all
-You can also load multiple sources (but not all) by setting the list =consult-omni-sources-modules-to-load= and then loading calling =consult-omni-sources-load-modules=:
+You can also load multiple sources (but not all) by setting the list =consult-omni-sources-modules-to-load= and then calling =consult-omni-sources-load-modules=:
 #+begin_src emacs-lisp
 (require 'consult-omni-sources)
 (setq consult-omni-sources-modules-to-load '(consult-omni-google consult-omni-wikipedia))
@@ -281,6 +282,7 @@ Here is a list of current sources. For details on how to set and use each source
 | Numi                     | Calculator with numi-cli/ command from [[https://github.com/nikolaeu/numi][Numi]]) |
 | Org agenda               | Search Org Agenda Items                      |
 | PubMed                   | Academic Reference                           |
+| Projects                 | Search projects (from projects.el)           |
 | Scopus                   | Academic Reference                           |
 | StackOverflow            | Community Forum                              |
 | Wikipedia                | Encyclopedia                                 |
@@ -290,7 +292,7 @@ Here is a list of current sources. For details on how to set and use each source
 
 ** Configuration
 consult-omni is built with the idea that the user should be able to customize everything based on their use-case, therefore the user is very much expected to learn how to configure this package. Therefore, I recommend you read through this section and understand how to configure the package according to your needs and for your specific use-case.
-In addition to these settings, some sources have their own customization variables, etc. which is discussed in the [[https://github.com/armindarvish/consult-omni/wiki][wiki pages]] (under construction now) and inn this YouTube Tutorial: https://www.youtube.com/watch?v=wNH2E7iT__c.
+In addition to these settings, some sources have their own customization variables, etc. which is discussed in the [[https://github.com/armindarvish/consult-omni/wiki][wiki pages]] (under construction now) and in this YouTube Tutorial: https://www.youtube.com/watch?v=wNH2E7iT__c.
 
 
 *** Customization  Variables
@@ -540,7 +542,7 @@ Here is a drop-in config snippet that puts everything mentioned above together. 
   (consult-omni-dynamic-refresh-delay 0.8)
 
   ;; Optionally set backend for http request (either 'url, 'request, or 'plz)
-  (consult-omni-http-retrieve-backend 'plz)
+  ;; (consult-omni-http-retrieve-backend 'plz)
 
   :config
 
@@ -598,7 +600,7 @@ Here is a drop-in config snippet that puts everything mentioned above together. 
   ;; pretty prompt for launcher
   (setq consult-omni-open-with-prompt "  ")
 
-  ;;; Pick you favorite autosuggest command.
+  ;;; Pick your favorite autosuggest command.
   (setq consult-omni-default-autosuggest-command #'consult-omni-dynamic-brave-autosuggest) ;;or any other autosuggest source you define
 
   ;;; Set your shorthand favorite interactive command
@@ -675,9 +677,9 @@ See `consult-omni-multi' for more details.
 
 
 * Comparison to Other Packages
-To the best of my knowledge no other Emacs package provides the functionality and versatility of consult-omni. While there are several packages for web searches, (see the discussion under consult-web package), there is no omni-search package that I know of.
+To the best of my knowledge no other Emacs package provides the functionality and versatility of consult-omni. While there are several packages for web searches, (see the discussion in [[https://github.com/armindarvish/consult-web][consult-web]]'s README), there is no omni-search package that I know of.
 
-Outside Emacs, there are of course tolls like MacOS Spotlight and Alfred, that provide omni-search utilities, but compared to =consult-omni= they lack versatility, and customizability.
+Outside Emacs, there are of course tools like MacOS Spotlight and Alfred, that provide omni-search utilities, but compared to =consult-omni= they lack versatility, and customizability.
 - Spotlight: spotlight lacks advanced features and is not very customizable. For example it is not easy to access browser history or add an AI chatbot to search results. It's not even possible to get web search results directly in the spotlight. Instead, it suggests opening a web browser and jumping to the search homepage.
 - Alfred: Alfred does provide more customizability and advanced workflows, but that does not come for free. all advanced workflows need a paid license. The consistency of the overall workflow is not great either since plugins are made by various people and do not require to follow a consistent pattern (in terms of keybindings, ...).
 

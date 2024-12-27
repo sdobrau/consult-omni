@@ -5,11 +5,11 @@
 ;; Author: Armin Darvish
 ;; Maintainer: Armin Darvish
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: (
 ;;         (emacs "28.1")
-;;         (consult "1.4")
-;;         (consult-omni "0.1"))
+;;         (consult "1.9")
+;;         (consult-omni "0.2"))
 ;;
 ;; Homepage: https://github.com/armindarvish/consult-omni
 ;; Keywords: convenience
@@ -32,6 +32,7 @@
 ;; make a consult-omni source from `consult--source-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-buffer
                                                :type 'sync
+                                               :min-input 0
                                                :on-preview #'consult-omni--consult-buffer-preview
                                                :on-return #'identity
                                                :on-callback #'consult--buffer-action
@@ -46,6 +47,7 @@
 ;; make a consult-omni source from `consult--source-modified-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-modified-buffer
                                                :type 'sync
+                                               :min-input 0
                                                :on-preview #'consult-omni--consult-buffer-preview
                                                :on-return #'identity
                                                :on-callback #'consult--buffer-action
@@ -60,6 +62,7 @@
 ;; make a consult-omni source from `consult--source-hidden-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-hidden-buffer
                                                :type 'sync
+                                               :min-input 0
                                                :on-preview #'consult-omni--consult-buffer-preview
                                                :on-return #'identity
                                                :on-callback #'consult--buffer-action
@@ -74,6 +77,7 @@
 ;; make a consult-omni source from `consult--source-project-buffer'
 (consult-omni--make-source-from-consult-source 'consult--source-project-buffer
                                                :type 'sync
+                                               :min-input 0
                                                :on-preview #'consult-omni--consult-buffer-preview
                                                :on-return #'identity
                                                :on-callback #'consult--buffer-action
@@ -88,6 +92,7 @@
 ;; make a consult-omni source from `consult--source-recent-file'
 (consult-omni--make-source-from-consult-source 'consult--source-recent-file
                                                :type 'sync
+                                               :min-input 0
                                                :on-preview #'consult-omni--consult-buffer-preview
                                                :on-return #'identity
                                                :on-callback #'consult--file-action
@@ -102,6 +107,7 @@
 ;; make a consult-omni source from `consult--source-project-recent-file'
 (consult-omni--make-source-from-consult-source 'consult--source-project-recent-file
                                                :type 'sync
+                                               :min-input 0
                                                :on-preview #'consult-omni--consult-buffer-preview
                                                :on-return #'identity
                                                :on-callback #'consult--file-action
@@ -116,6 +122,7 @@
 ;; make a consult-omni source from `consult--source-bookmark'
 (consult-omni--make-source-from-consult-source 'consult--source-bookmark
                                                :type 'sync
+                                               :min-input 0
                                                :on-preview #'consult-omni--consult-buffer-preview
                                                :on-return #'identity
                                                :on-callback #'consult--bookmark-action
