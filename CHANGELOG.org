@@ -13,7 +13,9 @@
   (see =:min-input= keyword arg in =consult-omni-define-source=)
 - Added the ability to define a funciton to check if input is valid per source
   (see =:valid-input= keyword arg in ==consult-omni-define-source==)
-- Added new sources for "Projects".
+- Added a new source for "Projects".
+- Improve default action for new items (See #33)
+
 
 * Version 0.1 (2023-08-18)
 
