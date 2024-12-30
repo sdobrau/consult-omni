@@ -1694,12 +1694,13 @@ Description of Arguments:
          (transform (consult-omni--get-source-prop name :transform))
          (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input)))
     (when (and (stringp input) (>= (length input) min-input))
-    (funcall (plist-get source :items) input
-             :callback (lambda (response-items)
-                         (when response-items
-                           (when transform (setq response-items (funcall transform response-items input)))
-                           (funcall async (consult-omni--multi-propertize response-items cat idx face))
-                           (funcall async 'refresh))) args))))
+      (funcall (plist-get source :items) input
+               :callback (lambda (response-items)
+                           (when response-items
+                             (when transform (setq response-items (funcall transform response-items input)))
+                             (funcall async (consult-omni--multi-propertize response-items cat idx face))
+                             (funcall async 'refresh)))
+               args))))
 
 (defun consult-omni--multi-update-async-candidates (async source idx input &rest args)
   "Asynchronously collect candidates for INPUT from a “async” SOURCE.
