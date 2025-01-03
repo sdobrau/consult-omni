@@ -1255,15 +1255,16 @@ IGNORE-OPTS is a list of opts to exclude.
 This is useful for example to extract key value pairs
 from command-line options in a list of strings"
   (unless (member opt ignore-opts)
-    (let* ((key (cond
-                 ((string-match-p "-.*$" opt)
-                  (intern (concat ":" (replace-regexp-in-string "--" "" opt))))
-                 ((string-match-p ":.*$" opt)
-                  (intern opt))
-                 (t nil)))
-           (val (or (cadr (member opt opts)) "nil")))
-      (when key
-        (cons key val)))))
+    (save-match-data
+      (let* ((key (cond
+                   ((string-match "-\\{1,2\\}\\(?1:.*\\)$" opt)
+                    (intern (concat ":" (match-string 1 opt))))
+                   ((string-match ":\\(?1:.*\\)$" opt)
+                    (match-string 1 opt))
+                   (t nil)))
+             (val (or (cadr (member opt opts)) "nil")))
+        (when key
+          (cons key val))))))
 
 (defun consult-omni--split-command (input &rest args)
   "Append command argument and options list in INPUT string to ARGS.
