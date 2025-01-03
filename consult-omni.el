@@ -1255,15 +1255,16 @@ IGNORE-OPTS is a list of opts to exclude.
 This is useful for example to extract key value pairs
 from command-line options in a list of strings"
   (unless (member opt ignore-opts)
-    (let* ((key (cond
-                 ((string-match-p "-.*$" opt)
-                  (intern (concat ":" (replace-regexp-in-string "--" "" opt))))
-                 ((string-match-p ":.*$" opt)
-                  (intern opt))
-                 (t nil)))
-           (val (or (cadr (member opt opts)) "nil")))
-      (when key
-        (cons key val)))))
+    (save-match-data
+      (let* ((key (cond
+                   ((string-match "-\\{1,2\\}\\(?1:.*\\)$" opt)
+                    (intern (concat ":" (match-string 1 opt))))
+                   ((string-match ":\\(?1:.*\\)$" opt)
+                    (match-string 1 opt))
+                   (t nil)))
+             (val (or (cadr (member opt opts)) "nil")))
+        (when key
+          (cons key val))))))
 
 (defun consult-omni--split-command (input &rest args)
   "Append command argument and options list in INPUT string to ARGS.
@@ -1694,12 +1695,13 @@ Description of Arguments:
          (transform (consult-omni--get-source-prop name :transform))
          (min-input (or (consult-omni--get-source-prop name :min-input) consult-omni-async-min-input)))
     (when (and (stringp input) (>= (length input) min-input))
-    (funcall (plist-get source :items) input
-             :callback (lambda (response-items)
-                         (when response-items
-                           (when transform (setq response-items (funcall transform response-items input)))
-                           (funcall async (consult-omni--multi-propertize response-items cat idx face))
-                           (funcall async 'refresh))) args))))
+      (funcall (plist-get source :items) input
+               :callback (lambda (response-items)
+                           (when response-items
+                             (when transform (setq response-items (funcall transform response-items input)))
+                             (funcall async (consult-omni--multi-propertize response-items cat idx face))
+                             (funcall async 'refresh)))
+               args))))
 
 (defun consult-omni--multi-update-async-candidates (async source idx input &rest args)
   "Asynchronously collect candidates for INPUT from a “async” SOURCE.
