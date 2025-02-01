@@ -57,7 +57,7 @@ Description of Arguments:
 
 (defun consult-omni--mu-preview (cand)
   "Preview function for CAND from `consult-omni-mu4e'."
-  (when-let* ((info (text-properties-at 0 (cdr (get-text-property 0 'multi-category cand))))
+  (when-let* ((info (cdr (get-text-property 0 'multi-category cand)))
               (msg (plist-get info :msg))
               (query (plist-get info :query))
               (msgid (substring-no-properties (plist-get msg :message-id)))
